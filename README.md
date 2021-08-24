@@ -311,7 +311,7 @@ data = 'youtube'
 #### Load real-world dataset
 train_data, valid_data, test_data = load_dataset(dataset_home, data, extract_feature=False)
 
-#### Generate semi-synthetic labeling functions
+#### Generate procedural labeling functions
 generator = NGramLFGenerator(dataset=train_data, min_acc_gain=0.1, min_support=0.01, ngram_range=(1, 2))
 applier = generator.generate(mode='correlated', n_lfs=10)
 L_test = applier.apply(test_data)
