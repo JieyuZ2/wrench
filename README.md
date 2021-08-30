@@ -100,35 +100,6 @@ The detailed documentation is coming soon.
 | ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link]() |
 
 
-# 🔧  Benchmark
-
-## 🔧  Classification
-
-<p align="center">
-    <img src="./images/bench_class1.png" width="80%"/> <br />
-    <em> 
-    Performance comparisons on classification tasks (1).
-    </em>
-</p>
-
-<p align="center">
-    <img src="./images/bench_class2.png" width="60%"/> <br />
-    <em> 
-    Performance comparisons on classification tasks (2).
-    </em>
-</p>
-
-
-## 🔧  Sequence Tagging
-
-<p align="center">
-    <img src="./images/bench_seq.png" width="100%"/> <br />
-    <em> 
-    Performance comparisons on sequence tagging tasks.
-    </em>
-</p>
-
-
 # 🔧  Quick examples
 
 
