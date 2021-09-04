@@ -41,6 +41,15 @@ source activate wrench
 
 The datasets can be downloaded via [this](https://drive.google.com/drive/folders/1v55IKG2JN9fMtKJWU48B_5_DcPWGnpTq?usp=sharing).
 
+or via command line
+
+```
+pip install gdown 
+gdown https://drive.google.com/uc?id=19wMFmpoo_0ORhBzB6n16B1nRRX508AnJ
+unzip datasets.zip
+rm datasets.zip 
+```
+
 ### classification:
 | Name | Task | # class | # LF | # train | # validation | # test | data source | LF source |
 |:--------|:---------|:------|:------|:------|:------|:------|:------|:------|
