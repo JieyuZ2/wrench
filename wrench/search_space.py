@@ -106,6 +106,6 @@ SEARCH_SPACE = {
 }
 
 SEARCH_SPACE['LSTMConNetModel'] = deepcopy(SEARCH_SPACE['LSTMTaggerModel'])
-SEARCH_SPACE['LSTMConNetModel'].update({'n_steps_phase1': [100, 200, 500]})
+SEARCH_SPACE['LSTMConNetModel'].update({'n_steps_phase1': [200, 500, 1000]})
 SEARCH_SPACE['BERTConNetModel'] = deepcopy(SEARCH_SPACE['BERTTaggerModel'])
-SEARCH_SPACE['BERTConNetModel'].update({'n_steps_phase1': [100, 200, 500]})
+SEARCH_SPACE['BERTConNetModel'].update({'n_steps_phase1': [200, 500, 1000]})

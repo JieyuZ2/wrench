@@ -446,10 +446,8 @@ class BaseConNet(BackBone, ABC):
         '''Get sentence-level representation, concatenating the embedding of the first token and the final token'''
         # feats [B, len, hidden_dim] -> [B, 2 * hidden_dim]
         batch_size = feats.size(0)
-        hidden_dim = feats.size(2)
         start_feat = feats[:, 0, :]
-        length_mask = torch.sum(mask.long(), dim=1).view(batch_size, 1, 1).expand(batch_size, 1, hidden_dim).long()
-        end_feat = torch.gather(feats, 1, length_mask - 1).squeeze(1)
+        end_feat = feats[torch.arange(batch_size), torch.sum(mask.long(), dim=1)-1]
         return torch.cat([start_feat, end_feat], -1)
 
 
