@@ -95,19 +95,21 @@ The detailed documentation is coming soon.
 | FlyingSquid | Label Model | [link](https://arxiv.org/pdf/2002.11955) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/labelmodel/flyingsquid.py#L16) |
 | Logistic Regression | End Model | -- | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/linear_model.py#L52) |
 | MLP | End Model | -- | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/neural_model.py#L21) |
-| Pre-trained Language Model | End Model | [link](https://huggingface.co/models) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/bert_model.py#L23) |
+| BERT | End Model | [link](https://huggingface.co/models) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/bert_model.py#L23) |
 | COSINE | End Model | [link](https://arxiv.org/abs/2010.07835) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/cosine.py#L68) |
 | Denoise | Joint Model | [link](https://arxiv.org/abs/2010.04582) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/denoise.py#L72) |
 
 ### sequence tagging:
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
-| Hidden Markov Model | Label Model | [link](https://arxiv.org/abs/2004.14723) | [link]() |
-| Conditional Hidden Markov Model | Label Model | [link](https://arxiv.org/abs/2105.12848) | [link]() |
-| LSTM-CNNs-CRF | End Model | [link](https://arxiv.org/abs/1603.01354) | [link]() |
-| Pre-trained Language Model | End Model | [link](https://huggingface.co/models) | [link]() |
-| ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link]() |
+| Hidden Markov Model | Label Model | [link](https://arxiv.org/abs/2004.14723) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/hmm.py#L81) |
+| Conditional Hidden Markov Model | Label Model | [link](https://arxiv.org/abs/2105.12848) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/chmm.py#L33) |
+| LSTM-CNNs-CRF | End Model | [link](https://arxiv.org/abs/1603.01354) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_endmodel/lstm_crf_model.py#L86) |
+| BERT-CRF | End Model | [link](https://huggingface.co/models) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_endmodel/bert_crf_model.py#L23) |
+| LSTM-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L45) |
+| BERT-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L210) |
 
+Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/seq_wrapper.py#L43) that adaptes label model for classification task to sequence tagging task.
 
 # 🔧  Quick examples
 
