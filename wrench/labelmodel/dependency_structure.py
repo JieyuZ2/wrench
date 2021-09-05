@@ -2,10 +2,9 @@
 https://github.com/HazyResearch/metal/blob/cb_deps/tutorials/Learned_Deps.ipynb
 """
 
-
 import cvxpy as cp
-import scipy as sp
 import numpy as np
+import scipy as sp
 
 
 def get_deps_from_inverse_sig(J, thresh=0.2):
@@ -52,5 +51,5 @@ def learn_structure(L, thresh=1.5):
     J_hat = S.value
 
     deps_hat = get_deps_from_inverse_sig(J_hat, thresh=thresh)
-    deps = [(i, j) for i, j in deps_hat if i<j]
+    deps = [(i, j) for i, j in deps_hat if i < j]
     return deps

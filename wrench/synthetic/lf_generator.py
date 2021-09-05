@@ -1,18 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
-from numbers import Number
 from collections import Counter, defaultdict
-from itertools import chain
 from functools import partial
-from tqdm import trange
+from itertools import chain
+from numbers import Number
+from typing import List, Optional, Union, Callable
+
 import numpy as np
 from scipy.sparse import csr_matrix
-from sklearn.utils import check_array, check_random_state
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.utils import check_random_state
+from tqdm import trange
 
 from ..dataset import BaseDataset, TextDataset
-
 
 ABSTAIN = -1
 
@@ -83,7 +83,7 @@ class UnaryExpression(Expression):
 
 class GreaterExpression(UnaryExpression):
     def apply_(self, x: np.ndarray):
-        return x  > self.threshold
+        return x > self.threshold
 
     def include_(self, other: Expression):
         if isinstance(other, GreaterExpression) or isinstance(other, EqualExpression):
@@ -100,6 +100,7 @@ class GreaterExpression(UnaryExpression):
         if isinstance(other, LessExpression):
             return other.threshold < self.threshold
         return False
+
 
 class LessExpression(UnaryExpression):
     def apply_(self, x: np.ndarray):
@@ -121,6 +122,7 @@ class LessExpression(UnaryExpression):
             return other.threshold > self.threshold
         return False
 
+
 class EqualExpression(UnaryExpression):
     def apply_(self, x: np.ndarray):
         return x == self.threshold
@@ -135,6 +137,7 @@ class EqualExpression(UnaryExpression):
             return other.threshold != self.threshold
         else:
             return other.exclude(self)
+
 
 class InIntervalExpression(UnaryExpression):
     def apply_(self, x: np.ndarray):
@@ -153,6 +156,7 @@ class InIntervalExpression(UnaryExpression):
         if isinstance(other, InIntervalExpression):
             return other.threshold[0] > self.threshold[1] or other.threshold[1] < self.threshold[0]
         return other.exclude(self)
+
 
 class OutIntervalExpression(UnaryExpression):
     def apply_(self, x: np.ndarray):
@@ -181,6 +185,7 @@ class OutIntervalExpression(UnaryExpression):
 
 class BinaryExpression(Expression):
     logic_op: Callable
+
     def __init__(self, e1: Expression, e2: Expression):
         self.e1 = e1
         self.e2 = e2
@@ -206,8 +211,10 @@ class BinaryExpression(Expression):
             e2_excluded = self.e1.exclude(other.e2) and self.e2.exclude(other.e2)
             return e1_excluded and e2_excluded
 
+
 class AndExpression(BinaryExpression):
     logic_op = staticmethod(np.logical_and)
+
 
 class OrExpression(BinaryExpression):
     logic_op = staticmethod(np.logical_or)
@@ -221,7 +228,7 @@ class NGramExpression(Expression):
 
     def apply(self, x: np.ndarray):
         assert x.ndim == 2, 'dimension of x should be 2!'
-        applied = x[:, self.idx]  > self.threshold
+        applied = x[:, self.idx] > self.threshold
         if isinstance(applied, csr_matrix):
             applied = applied.toarray().squeeze()
         return applied
@@ -249,7 +256,7 @@ class LF:
 
     def apply(self, x: np.ndarray):
         x = self.e.apply(x)
-        return x * self.label + (1-x) * ABSTAIN
+        return x * self.label + (1 - x) * ABSTAIN
 
 
 class AbstractLFApplier:
@@ -271,7 +278,7 @@ class FeatureLFApplier(AbstractLFApplier):
         super().__init__(lf_list)
         self.preprocessor = preprocessor
 
-    def apply(self, dataset:Union[BaseDataset, np.ndarray]):
+    def apply(self, dataset: Union[BaseDataset, np.ndarray]):
         if self.preprocessor is not None:
             X = self.preprocessor(dataset)
         else:
@@ -307,13 +314,13 @@ class NoEnoughLFError(Exception):
         super().__init__(self.message)
 
 
-
 class AbstractLFGenerator(ABC):
     lf_applier_type: Callable
     X: Union[np.ndarray, csr_matrix]
     label_to_candidate_lfs: dict
+
     def __init__(self,
-                 dataset:Union[BaseDataset, np.ndarray],
+                 dataset: Union[BaseDataset, np.ndarray],
                  y: Optional[np.ndarray] = None,
                  min_acc_gain: float = 0.1,
                  min_support: float = 0.01,
@@ -431,25 +438,24 @@ class AbstractLFGenerator(ABC):
                 for i in range(m):
                     cond_probs[c, i] = self.array_to_marginals(L[:, i][c_idx])
 
-
-            cmi_matrix = -np.ones((m, m))*np.inf
+            cmi_matrix = -np.ones((m, m)) * np.inf
             for i in trange(m):
                 L_i = L[:, i]
-                for j in range(i+1, m):
+                for j in range(i + 1, m):
                     L_j = L[:, j]
                     cmi_ij = 0.0
                     for c, (c_idx, n_c) in enumerate(zip(c_idx_l, c_cnt_l)):
                         cmi = 0.0
-                        p_00 =  np.sum(np.logical_and(L_i[c_idx]==-1, L_j[c_idx]==-1)) / n_c
+                        p_00 = np.sum(np.logical_and(L_i[c_idx] == -1, L_j[c_idx] == -1)) / n_c
                         if p_00 > 0:
-                            cmi += p_00 * np.log(p_00 / (cond_probs[c,i,0]*cond_probs[c,j,0]))
+                            cmi += p_00 * np.log(p_00 / (cond_probs[c, i, 0] * cond_probs[c, j, 0]))
                         p_01 = np.sum(np.logical_and(L_i[c_idx] == -1, L_j[c_idx] != -1)) / n_c
                         if p_01 > 0:
                             cmi += p_01 * np.log(p_01 / (cond_probs[c, i, 0] * cond_probs[c, j, 1]))
                         p_10 = np.sum(np.logical_and(L_i[c_idx] != -1, L_j[c_idx] == -1)) / n_c
                         if p_10 > 0:
                             cmi += p_10 * np.log(p_10 / (cond_probs[c, i, 1] * cond_probs[c, j, 0]))
-                        p_11 = 1-(p_00+p_01+p_10)
+                        p_11 = 1 - (p_00 + p_01 + p_10)
                         if p_11 > 0:
                             cmi += p_11 * np.log(p_11 / (cond_probs[c, i, 1] * cond_probs[c, j, 1]))
                         cmi_ij += class_marginal[c] * cmi
@@ -473,16 +479,16 @@ class AbstractLFGenerator(ABC):
                 candidate_lfs = self.label_to_candidate_lfs[label]
                 L = np.stack([lf.apply(self.X) for lf in candidate_lfs]).T
                 n, m = L.shape
-                Y = np.array(self.Y==label, dtype=int)
+                Y = np.array(self.Y == label, dtype=int)
                 c_idx_l = [Y == 0, Y == 1]
                 c_cnt_l = [np.sum(c_idx) for c_idx in c_idx_l]
-                class_marginal = [c_cnt/n for c_cnt in c_cnt_l]
+                class_marginal = [c_cnt / n for c_cnt in c_cnt_l]
                 cond_probs = np.zeros((2, m, 2))
                 for c, c_idx in enumerate(c_idx_l):
                     for i in range(m):
                         cond_probs[c, i] = self.array_to_marginals(L[:, i][c_idx])
 
-                cmi_matrix = -np.ones((m, m))*np.inf
+                cmi_matrix = -np.ones((m, m)) * np.inf
                 for i in trange(m):
                     L_i = L[:, i]
                     for j in range(i + 1, m):
@@ -541,7 +547,7 @@ class AbstractLFGenerator(ABC):
 
 class FeatureLFGenerator(AbstractLFGenerator):
     def __init__(self,
-                 dataset:Union[BaseDataset, np.ndarray],
+                 dataset: Union[BaseDataset, np.ndarray],
                  y: Optional[np.ndarray] = None,
                  min_acc_gain: float = 0.1,
                  min_support: float = 0.01,
@@ -572,7 +578,7 @@ class FeatureLFGenerator(AbstractLFGenerator):
                 thres = x[argsort_idx[interval]]
                 if thres == max_x: break
                 while interval < n_data:
-                    if x[argsort_idx[interval-1]] == thres:
+                    if x[argsort_idx[interval - 1]] == thres:
                         interval += 1
                         thres = x[argsort_idx[interval]]
                     else:
@@ -581,7 +587,7 @@ class FeatureLFGenerator(AbstractLFGenerator):
                     bin_list_i.append(max_x)
                     break
                 else:
-                    bin_list_i.append((thres + x[argsort_idx[interval+1]]) / 2)
+                    bin_list_i.append((thres + x[argsort_idx[interval + 1]]) / 2)
                     interval += bin_size
 
             last_thres = bin_list_i[-1]
@@ -589,7 +595,7 @@ class FeatureLFGenerator(AbstractLFGenerator):
                 if last_thres > max_x:
                     bin_list_i[-1] = max_x
                 else:
-                    left = np.sum(np.logical_and(last_thres<x, x<max_x))
+                    left = np.sum(np.logical_and(last_thres < x, x < max_x))
                     if left > (bin_size / 2):
                         bin_list_i.append(max_x)
                     else:
@@ -610,7 +616,7 @@ class FeatureLFGenerator(AbstractLFGenerator):
                 bin_list_i = self.bin_list[idx]
                 x = self.X[:, idx]
                 idx_lfs = self.generate_half_bounded_lf(x, y, idx, label, bin_list_i, min_acc) \
-                            + self.generate_interval_lf(x, y, idx, label, bin_list_i, min_acc)
+                          + self.generate_interval_lf(x, y, idx, label, bin_list_i, min_acc)
                 if len(idx_lfs) > 1:
                     idx_to_lfs_i[idx] = idx_lfs
                     idx_to_lfs[idx] += idx_lfs
@@ -646,7 +652,7 @@ class FeatureLFGenerator(AbstractLFGenerator):
         n = len(x)
         for i in range(1, len(bin_list) - 1):
             thres = (bin_list[i], bin_list[i + 1])
-            in_interval_idx = np.logical_and(thres[0]<x, x<thres[1])
+            in_interval_idx = np.logical_and(thres[0] < x, x < thres[1])
             in_interval_acc = self.calc_acc(y[in_interval_idx])
             if in_interval_acc > min_acc and np.sum(in_interval_idx) > self.min_support:
                 propensity = np.sum(in_interval_idx) / n
@@ -654,7 +660,7 @@ class FeatureLFGenerator(AbstractLFGenerator):
                 lf = LF(e=e, label=label, acc=in_interval_acc, propensity=propensity)
                 lfs.append(lf)
             else:
-                out_interval_idx = np.logical_or(thres[0]>x, x>thres[1])
+                out_interval_idx = np.logical_or(thres[0] > x, x > thres[1])
                 out_interval_acc = self.calc_acc(y[out_interval_idx])
                 if out_interval_acc > min_acc and np.sum(out_interval_acc) > self.min_support:
                     propensity = np.sum(out_interval_idx) / n
@@ -685,13 +691,12 @@ class FeatureLFGenerator(AbstractLFGenerator):
         return FeatureLFApplier(lfs)
 
 
-
 class NGramLFGenerator(AbstractLFGenerator):
     def __init__(self,
-                 dataset:TextDataset,
+                 dataset: TextDataset,
                  y: Optional[np.ndarray] = None,
                  vectorizer: CountVectorizer = None,
-                 ngram_range = (1, 1),
+                 ngram_range=(1, 1),
                  min_acc_gain: float = 0.1,
                  min_support: float = 0.01,
                  random_state=None
@@ -736,10 +741,3 @@ class NGramLFGenerator(AbstractLFGenerator):
             assert len(lfs) > 1, f'cannot find any lf for label {label}, please lower the min support or the min acc gain!'
             label_to_lfs[label] = lfs
         return label_to_lfs
-
-
-
-
-
-
-

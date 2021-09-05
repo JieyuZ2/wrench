@@ -1,9 +1,9 @@
-from .baselabelmodel import BaseLabelModel
-from .majority_voting import MajorityVoting, MajorityWeightedVoting
-from .snorkel import Snorkel
-from .metal import MeTaL
+from .baselabelmodel import BaseLabelModel, check_weak_labels
+from .dawid_skene import DawidSkene
 from .flyingsquid import FlyingSquid
 from .generative_model import GenerativeModel
-from .dawid_skene import DawidSkene
-from .naive_bayes import NaiveBayesModel
 from .gold import GoldCondProb
+from .majority_voting import MajorityVoting, MajorityWeightedVoting
+from .metal import MeTaL
+from .naive_bayes import NaiveBayesModel
+from .snorkel import Snorkel

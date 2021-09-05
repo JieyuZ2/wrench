@@ -1,24 +1,22 @@
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
 import logging
-import numpy as np
-from tqdm import tqdm, trange
+from typing import Any, Optional, Union, Callable
 
+import numpy as np
 import torch
-import torch.nn.functional as F
 from torch import optim
 from torch.utils.data import DataLoader
-
+from tqdm.auto import trange
 from transformers import get_linear_schedule_with_warmup
 
-from ..basemodel import BaseTorchModel, BaseModel
+from ..backbone import BackBone, MLP
+from ..basemodel import BaseTorchClassModel
 from ..dataset import BaseDataset, TorchDataset
-from ..backbone import MLP
 from ..utils import cross_entropy_with_probs
 
 logger = logging.getLogger(__name__)
 
 
-class MLPModel(BaseTorchModel):
+class MLPModel(BaseTorchClassModel):
     def __init__(self,
                  lr: Optional[float] = 1e-3,
                  l2: Optional[float] = 1e-3,
@@ -31,16 +29,16 @@ class MLPModel(BaseTorchModel):
                  ):
         super().__init__()
         self.hyperparas = {
-            'lr': lr,
-            'l2': l2,
-            'batch_size': batch_size,
+            'lr'             : lr,
+            'l2'             : l2,
+            'batch_size'     : batch_size,
             'test_batch_size': test_batch_size,
-            'hidden_size': hidden_size,
-            'dropout': dropout,
-            'n_steps': n_steps,
-            'binary_mode': binary_mode,
+            'hidden_size'    : hidden_size,
+            'dropout'        : dropout,
+            'n_steps'        : n_steps,
+            'binary_mode'    : binary_mode,
         }
-        self.model: Optional[BaseModel] = None
+        self.model: Optional[BackBone] = None
 
     def fit(self,
             dataset_train: Union[BaseDataset, np.ndarray],
@@ -74,7 +72,7 @@ class MLPModel(BaseTorchModel):
             sample_weight = np.ones(len(dataset_train))
         sample_weight = torch.FloatTensor(sample_weight).to(device)
 
-        n_class = len(dataset_train.id2label)
+        n_class = dataset_train.n_class
         input_size = dataset_train.features.shape[1]
         model = MLP(
             input_size=input_size,
@@ -95,8 +93,7 @@ class MLPModel(BaseTorchModel):
         history = {}
         last_step_log = {'loss': -1}
         try:
-            with trange(n_steps, desc="training:", unit="steps", disable=not verbose, position=0, ncols=200,
-                        leave=True) as pbar:
+            with trange(n_steps, desc="[TRAIN] MLP Classifier", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
                 model.train()
                 step = 0
                 for batch in train_dataloader:
@@ -122,16 +119,20 @@ class MLPModel(BaseTorchModel):
                             break
 
                         history[step] = {
-                            'loss': loss.item(),
-                            f'val_{metric}': metric_value,
+                            'loss'              : loss.item(),
+                            f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            f'best_step': self.best_step,
+                            f'best_step'        : self.best_step,
                         }
                         last_step_log.update(history[step])
 
                     last_step_log['loss'] = loss.item()
                     pbar.update()
                     pbar.set_postfix(ordered_dict=last_step_log)
+
+                    if step >= n_steps:
+                        break
+
         except KeyboardInterrupt:
             logger.info(f'KeyboardInterrupt! do not terminate the process in case need to save the best model')
 

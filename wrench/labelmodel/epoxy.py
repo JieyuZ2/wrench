@@ -1,8 +1,8 @@
+import cytoolz as tz
 import faiss
 import numpy as np
-from sklearn.metrics import pairwise
-import cytoolz as tz
 import torch
+from sklearn.metrics import pairwise
 
 
 class Epoxy:
@@ -32,7 +32,7 @@ class Epoxy:
             method: 'pytorch', 'faiss', or 'sklearn'
         '''
         self.L_train = L_train
-        self.n_class = len([i for i in np.unique(L_train) if i!=-1])
+        self.n_class = len([i for i in np.unique(L_train) if i != -1])
         self.gpu = gpu
         self.metric = metric
         self.method = method
@@ -311,7 +311,6 @@ def extend_lfs(
     m = L_mat.shape[1]
     expanded_L_mat = np.copy(L_mat)
 
-
     new_l = []
     if metric == 'cosine':
         max_dist_l = []
@@ -333,7 +332,7 @@ def extend_lfs(
                 closest[i] for closest in closest_l
             ]
             temp = np.stack(min_dist).T
-            temp[temp==-1] = np.inf
+            temp[temp == -1] = np.inf
             min_dist_l.append(temp.min(1))
         for closest in closest_l:
             new = [

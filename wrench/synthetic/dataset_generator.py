@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
+
 import numpy as np
 
 from .syntheticdataset import BaseSyntheticGenerator
@@ -16,8 +17,8 @@ class ConditionalIndependentGenerator(BaseSyntheticGenerator):
                  beta_radius: Optional[float] = 0.1,
                  random_state=None):
         super().__init__(n_class, n_lfs, class_prior, lf_prior, random_state)
-        self.alpha_l = self.generator.uniform(low=max(0, alpha-alpha_radius), high=min(1, alpha+alpha_radius), size=n_lfs)
-        self.beta_l = self.generator.uniform(low=max(0, beta-beta_radius), high=min(1, beta+beta_radius), size=n_lfs)
+        self.alpha_l = self.generator.uniform(low=max(0, alpha - alpha_radius), high=min(1, alpha + alpha_radius), size=n_lfs)
+        self.beta_l = self.generator.uniform(low=max(0, beta - beta_radius), high=min(1, beta + beta_radius), size=n_lfs)
 
     def generate(self, n_data: int = 1000):
         ids = list(range(n_data))
@@ -30,16 +31,16 @@ class ConditionalIndependentGenerator(BaseSyntheticGenerator):
                 if target == y:
                     p = alpha * beta / self.class_prior[y]
                 else:
-                    p = (1-alpha) * beta / (self.class_prior[y] * (self.n_class - 1))
+                    p = (1 - alpha) * beta / (self.class_prior[y] * (self.n_class - 1))
                 if self.generator.random() < p:
                     weak_label.append(target)
                 else:
                     weak_label.append(-1)
             weak_labels.append(weak_label)
         return {
-            'ids': ids,
-            'examples': examples,
-            'labels': labels,
+            'ids'        : ids,
+            'examples'   : examples,
+            'labels'     : labels,
             'weak_labels': weak_labels,
         }
 
@@ -75,23 +76,22 @@ class DataDependentGenerator(ConditionalIndependentGenerator):
             for alpha, beta, gamma, target, lf_pro_clusters in \
                     zip(self.alpha_l, self.beta_l, self.gamma_l, self.lf_targets, self.lf_pro_clusters):
                 if cluster not in lf_pro_clusters:
-                    alpha = max(alpha-gamma, 0.1)
+                    alpha = max(alpha - gamma, 0.1)
                 if target == y:
                     p = alpha * beta / self.class_prior[y]
                 else:
-                    p = (1-alpha) * beta / (self.class_prior[y] * (self.n_class - 1))
+                    p = (1 - alpha) * beta / (self.class_prior[y] * (self.n_class - 1))
                 if self.generator.random() < p:
                     weak_label.append(target)
                 else:
                     weak_label.append(-1)
             weak_labels.append(weak_label)
         return {
-            'ids': ids,
-            'examples': examples,
-            'labels': labels,
+            'ids'        : ids,
+            'examples'   : examples,
+            'labels'     : labels,
             'weak_labels': weak_labels,
         }
-
 
 
 class CorrelatedGenerator(ConditionalIndependentGenerator):
@@ -114,7 +114,7 @@ class CorrelatedGenerator(ConditionalIndependentGenerator):
         self.n_conflict = n_conflict
         self.conflict_theta = conflict_theta
         self.n_duplicate = n_duplicate
-        assert n_overlap+n_conflict+n_duplicate<n_lfs
+        assert n_overlap + n_conflict + n_duplicate < n_lfs
         super().__init__(n_class, n_lfs, class_prior, lf_prior, alpha, beta, alpha_radius, random_state)
 
         lf_pool = list(range(self.n_lfs))
@@ -151,7 +151,7 @@ class CorrelatedGenerator(ConditionalIndependentGenerator):
                 if target == y:
                     p = alpha * beta / self.class_prior[y]
                 else:
-                    p = (1-alpha) * beta / (self.class_prior[y] * (self.n_class - 1))
+                    p = (1 - alpha) * beta / (self.class_prior[y] * (self.n_class - 1))
                 if self.generator.random() < p:
                     weak_label[j] = target
 
@@ -188,8 +188,8 @@ class CorrelatedGenerator(ConditionalIndependentGenerator):
 
             weak_labels.append(weak_label.tolist())
         return {
-            'ids': ids,
-            'examples': examples,
-            'labels': labels,
+            'ids'        : ids,
+            'examples'   : examples,
+            'labels'     : labels,
             'weak_labels': weak_labels,
         }

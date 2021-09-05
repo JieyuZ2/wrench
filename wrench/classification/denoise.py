@@ -1,21 +1,20 @@
-from typing import Type, Any, Dict, List, Optional, Tuple, Union, Callable
 import logging
+from typing import Type, Any, Dict, Optional, Union, Callable
+
 import numpy as np
-from tqdm import tqdm, trange
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 from torch.utils.data import DataLoader
-
+from tqdm.auto import trange
 from transformers import get_linear_schedule_with_warmup
 
 from ..backbone import BackBone, MLP
-from ..basemodel import BaseModel, BaseTorchModel
-from ..labelmodel import BaseLabelModel, MajorityVoting
+from ..basemodel import BaseTorchClassModel
 from ..dataset import BaseDataset, TorchDataset
-from ..dataset.utils import check_dataset, split_labeled_unlabeled
-
+from ..dataset.utils import split_labeled_unlabeled
+from ..labelmodel import BaseLabelModel, MajorityVoting
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ class AssembleModel(nn.Module):
         super(AssembleModel, self).__init__()
         self.n_class = n_class
         self.backbone_model = backbone
-        self.attention = AttentionModel(input_size + n_rules, n_rules, hidden_size, n_class) #TODO
+        self.attention = AttentionModel(input_size + n_rules, n_rules, hidden_size, n_class)  # TODO
         self.dummy_param = nn.Parameter(torch.empty(0))
 
     def forward(self, batch_l, batch_u, x_lf_l, x_lf_u):
@@ -69,7 +68,7 @@ class AssembleModel(nn.Module):
         return predict_l, predict_u, lf_y_l, lf_y_u, fix_score.detach()
 
 
-class Denoise(BaseTorchModel):
+class Denoise(BaseTorchClassModel):
     def __init__(self,
                  lr: Optional[float] = 1e-3,
                  l2: Optional[float] = 0.0,
@@ -82,21 +81,21 @@ class Denoise(BaseTorchModel):
                  n_steps: Optional[int] = 10000):
         super().__init__()
         self.hyperparas = {
-            'lr': lr,
-            'l2': l2,
-            'alpha': alpha,
-            'c1': c1,
-            'c2': c2,
-            'batch_size': batch_size,
+            'lr'             : lr,
+            'l2'             : l2,
+            'alpha'          : alpha,
+            'c1'             : c1,
+            'c2'             : c2,
+            'batch_size'     : batch_size,
             'test_batch_size': test_batch_size,
-            'hidden_size': hidden_size,
-            'n_steps': n_steps,
+            'hidden_size'    : hidden_size,
+            'n_steps'        : n_steps,
         }
         self.model: Optional[AssembleModel] = None
         self.label_model: Optional[BaseLabelModel] = None
 
     def fit(self,
-            dataset_train:BaseDataset,
+            dataset_train: BaseDataset,
             y_train: Optional[np.ndarray] = None,
             dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
@@ -134,14 +133,14 @@ class Denoise(BaseTorchModel):
         n_steps = hyperparas['n_steps']
         alpha, c1, c2 = hyperparas['alpha'], hyperparas['c1'], hyperparas['c2']
 
-        n_rules = len(dataset_train.weak_labels[0])
-        n_class = len(dataset_train.id2label)
+        n_rules = dataset_train.n_lf
+        n_class = dataset_train.n_class
         input_size = dataset_train.features.shape[1]
 
         labeled_dataset, unlabeled_dataset = split_labeled_unlabeled(dataset_train, cut_tied=cut_tied)
-        labeled_dataloader = DataLoader(TorchDataset(labeled_dataset, n_data=n_steps*hyperparas['batch_size']),
+        labeled_dataloader = DataLoader(TorchDataset(labeled_dataset, n_data=n_steps * hyperparas['batch_size']),
                                         batch_size=hyperparas['batch_size'], shuffle=True)
-        unlabeled_dataloader = DataLoader(TorchDataset(unlabeled_dataset, n_data=n_steps*hyperparas['batch_size']),
+        unlabeled_dataloader = DataLoader(TorchDataset(unlabeled_dataset, n_data=n_steps * hyperparas['batch_size']),
                                           batch_size=hyperparas['batch_size'], shuffle=True)
         unlabel_dataloader_iterator = iter(unlabeled_dataloader)
 
@@ -176,7 +175,7 @@ class Denoise(BaseTorchModel):
         history = {}
         last_step_log = {}
         try:
-            with trange(n_steps, ncols=200, desc="training Denoise model", unit="steps", disable=not verbose) as pbar:
+            with trange(n_steps, desc="[TRAIN] Denoise", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
                 model.train()
                 step = 0
                 for label_batch in labeled_dataloader:
@@ -232,13 +231,13 @@ class Denoise(BaseTorchModel):
                             break
 
                         history[step] = {
-                            'loss': loss.item(),
-                            'loss_sup': loss_sup.item(),
-                            'loss_sup_weight': loss_sup_weight.item(),
-                            'loss_unsup': loss_unsup.item(),
-                            f'val_{metric}': metric_value,
+                            'loss'              : loss.item(),
+                            'loss_sup'          : loss_sup.item(),
+                            'loss_sup_weight'   : loss_sup_weight.item(),
+                            'loss_unsup'        : loss_unsup.item(),
+                            f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            f'best_step': self.best_step,
+                            f'best_step'        : self.best_step,
                         }
                         last_step_log.update(history[step])
 
@@ -248,6 +247,10 @@ class Denoise(BaseTorchModel):
                     last_step_log['loss_unsup'] = loss_unsup.item()
                     pbar.update()
                     pbar.set_postfix(ordered_dict=last_step_log)
+
+                    if step >= n_steps:
+                        break
+
         except KeyboardInterrupt:
             logger.info(f'KeyboardInterrupt! do not terminate the process in case need to save the best model')
 
@@ -255,7 +258,7 @@ class Denoise(BaseTorchModel):
 
         return history
 
-    def predict_proba(self, dataset:Union[BaseDataset, DataLoader], mode: Optional[str] = 'feature',
+    def predict_proba(self, dataset: Union[BaseDataset, DataLoader], mode: Optional[str] = 'feature',
                       device: Optional[torch.device] = None, **kwargs: Any):
         assert mode in ['ensemble', 'feature', 'rules'], f'mode: {mode} not support!'
         if device is not None:

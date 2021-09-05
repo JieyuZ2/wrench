@@ -1,21 +1,23 @@
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
 import warnings
 from collections import Counter
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import tensorflow.compat.v1 as tf
+
 tf.disable_v2_behavior()
 import tensorflow_hub as hub
+
 import numpy as np
 import torch
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from transformers import AutoTokenizer, AutoModel
 from sentence_transformers import SentenceTransformer
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from .basedataset import BaseDataset
 
 
-def check_dataset(dataset:Union[BaseDataset, np.ndarray], y: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+def check_dataset(dataset: Union[BaseDataset, np.ndarray], y: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
     if isinstance(dataset, BaseDataset):
         assert dataset.features is not None, f'Input dataset has None features, call dataset.extract_feature() first!'
         x = dataset.features
@@ -51,14 +53,14 @@ def split_labeled_unlabeled(dataset: BaseDataset, cut_tied: Optional[bool] = Fal
             if l_ >= 0:
                 counter[l_] += 1
                 weaklabels_cnt += 1
-        lst = counter.most_common() #.values()
+        lst = counter.most_common()  # .values()
         if np.max(l) <= -1:
-            unlabeled_idx.append(i) #= []
+            unlabeled_idx.append(i)  # = []
         else:
-            if cut_tied and (len(lst) > 1 and lst[0][-1] - lst[1][-1] <=0): # or weaklabels_cnt<=1:
-                unlabeled_idx.append(i) #= []
+            if cut_tied and (len(lst) > 1 and lst[0][-1] - lst[1][-1] <= 0):  # or weaklabels_cnt<=1:
+                unlabeled_idx.append(i)  # = []
             else:
-                labeled_idx.append(i) #= []
+                labeled_idx.append(i)  # = []
 
     if len(unlabeled_idx) == 0:
         warnings.warn('No unlabeled data found! Use full dataset uas unlabeled dataset')
@@ -103,7 +105,6 @@ def split_conf_unconf_by_percentile(dataset: BaseDataset, y: Optional[np.ndarray
 
     max_probs = np.max(y, axis=1)
 
-
     n = int(len(max_probs) * percentile)
     sort_idx = np.argsort(-max_probs)
     thres = max_probs[sort_idx[n]]
@@ -142,7 +143,6 @@ def split_conf_unconf_by_percentile(dataset: BaseDataset, y: Optional[np.ndarray
         return conf_dataset, unconf_dataset
 
 
-
 def split_conf_unconf(dataset: BaseDataset, y: Optional[np.ndarray] = None, mode: Optional[str] = 'thres',
                       theta: float = 0.2, return_y=True, return_thres=False):
     assert theta > 0 and theta < 1, f'theta should be in (0, 1), now it\'s {theta}!'
@@ -165,15 +165,15 @@ def split_conf_unconf(dataset: BaseDataset, y: Optional[np.ndarray] = None, mode
 
     if mode == 'thres':
         thres = theta
-        conf_idx = np.where(max_probs>=thres)[0]
-        unconf_idx = np.where(max_probs<thres)[0]
+        conf_idx = np.where(max_probs >= thres)[0]
+        unconf_idx = np.where(max_probs < thres)[0]
     elif mode == 'percentile':
         n = int(len(max_probs) * theta)
         split_point = n
         sort_idx = np.argsort(-max_probs)
         while split_point < len(max_probs):
             thres = max_probs[sort_idx[split_point]]
-            if max_probs[sort_idx[split_point-1]] == thres:
+            if max_probs[sort_idx[split_point - 1]] == thres:
                 split_point += 1
             else:
                 break
@@ -242,17 +242,18 @@ def elmo_sentence_extractor(data: List[Dict], batch_size=128, **kwargs: Any):
         with tf.Session(config=sess_config) as session:
             session.run([tf.global_variables_initializer(), tf.tables_initializer()])
             message_embeddings = []
-            for i in tqdm(range(0,len(corpus), batch_size)):
-                message_batch = corpus[i:i+batch_size]
-                #length_batch = message_lengths[i:i+batch_size]
-                embeddings_batch = session.run(elmo(message_batch,signature="default",as_dict=True))["default"]
-                #embeddings_batch = get_embeddings_list(embeddings_batch, length_batch, ELMO_EMBED_SIZE)
+            for i in tqdm(range(0, len(corpus), batch_size)):
+                message_batch = corpus[i:i + batch_size]
+                # length_batch = message_lengths[i:i+batch_size]
+                embeddings_batch = session.run(elmo(message_batch, signature="default", as_dict=True))["default"]
+                # embeddings_batch = get_embeddings_list(embeddings_batch, length_batch, ELMO_EMBED_SIZE)
                 message_embeddings.extend(embeddings_batch)
         return np.stack(message_embeddings)
+
     return extractor(data), extractor
 
 
-def sentence_transformer_extractor(data: List[Dict], model_name: Optional[str] = 'paraphrase-distilroberta-base-v1',  **kwargs: Any):
+def sentence_transformer_extractor(data: List[Dict], model_name: Optional[str] = 'paraphrase-distilroberta-base-v1', **kwargs: Any):
     corpus = list(map(lambda x: x['text'], data))
     model = SentenceTransformer(model_name, **kwargs)
     embeddings = model.encode(corpus)
@@ -271,6 +272,7 @@ def bert_text_extractor(data: List[Dict], device: torch.device = None, model_nam
     :param kwargs: misc arguments for the pretrained model.
     :return: text feature as np array of size (corpus_size, output_dim)
     """
+
     # assert feature == 'cls' or feature == 'avr', "Please choose from cls and avr as text feature."
 
     def extractor(data: List[Dict]):
@@ -295,7 +297,6 @@ def bert_text_extractor(data: List[Dict], device: torch.device = None, model_nam
     return embeddings, extractor
 
 
-
 #### feature extraction for RelationDataset
 def bert_relation_extractor(data: List[Dict], device: torch.device = None,
                             model_name: Optional[str] = 'bert-base-cased',
@@ -310,6 +311,7 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
     :return: Text feature as np array of size (corpus_size, output_dim * 3 = [cls;ent1;ent2]) for "cat",
             or (corpus_size, output_dim) for "avr",
     """
+
     # assert feature == 'cat' or feature == 'avr', "Please choose from cat and avr as text feature."
 
     def extractor(data: List[Dict]):
@@ -329,7 +331,7 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
             e1_tkns = tokenizer.tokenize(ent1_list[i])
             e2_tkns = tokenizer.tokenize(ent2_list[i])
 
-            e1_first =  span1s < span2s
+            e1_first = span1s < span2s
             if e1_first:
                 left_text = sentence[:span1s]
                 between_text = sentence[span1n:span2s]
@@ -385,8 +387,8 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
                 else:
                     tokens = tokens[:512]
 
-            assert e1_tkns == tokens[e1s+1:e1n-1]
-            assert e2_tkns == tokens[e2s+1:e2n-1]
+            assert e1_tkns == tokens[e1s + 1:e1n - 1]
+            assert e2_tkns == tokens[e2s + 1:e2n - 1]
             assert len(tokens) <= 512
 
             inputs = torch.tensor(tokenizer.convert_tokens_to_ids(tokens), device=device).unsqueeze(0)
@@ -406,26 +408,45 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
 
 
 def bert_entity_extractor(data: List[Dict], device: torch.device = None,
-                            model_name: Optional[str] = 'bert-base-cased', **kwargs: Any):
-        def extractor(data: List[Dict]):
-            model = AutoModel.from_pretrained(model_name, **kwargs).to(device)
-            tokenizer = AutoTokenizer.from_pretrained(model_name)  # e.g. 'bert-base-cased'
-            text_features = []
-            for item in tqdm(data):
-                s, e = item['span']
-                text = item['text']
-                left_tkns = ["[CLS]"] + tokenizer.tokenize(text[:s])
-                entity_tkns = tokenizer.tokenize(text[s:e])
-                right_tkns = tokenizer.tokenize(text[e:]) + ["[SEP]"]
-                tokens = left_tkns + entity_tkns + right_tkns
-                inputs = torch.tensor(tokenizer.convert_tokens_to_ids(tokens), device=device).unsqueeze(0)
-                output = model(inputs).last_hidden_state.detach().cpu().squeeze().numpy()  # [len(sentence), dim_out]
-                text_features.append(np.average(output[len(left_tkns):len(left_tkns+entity_tkns), :], axis=0))
-            return np.array(text_features)
+                          model_name: Optional[str] = 'bert-base-cased', **kwargs: Any):
+    def extractor(data: List[Dict]):
+        model = AutoModel.from_pretrained(model_name, **kwargs).to(device)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)  # e.g. 'bert-base-cased'
+        text_features = []
+        for item in tqdm(data):
+            s, e = item['span']
+            text = item['text']
+            left_tkns = ["[CLS]"] + tokenizer.tokenize(text[:s])
+            entity_tkns = tokenizer.tokenize(text[s:e])
+            right_tkns = tokenizer.tokenize(text[e:]) + ["[SEP]"]
+            tokens = left_tkns + entity_tkns + right_tkns
+            inputs = torch.tensor(tokenizer.convert_tokens_to_ids(tokens), device=device).unsqueeze(0)
+            output = model(inputs).last_hidden_state.detach().cpu().squeeze().numpy()  # [len(sentence), dim_out]
+            text_features.append(np.average(output[len(left_tkns):len(left_tkns + entity_tkns), :], axis=0))
+        return np.array(text_features)
 
-        embeddings = extractor(data)
-        return embeddings, extractor
-
-
+    embeddings = extractor(data)
+    return embeddings, extractor
 
 
+#### Loading Glove Embedding for Sequence Dataset
+def get_glove_embedding(embedding_file_path=None, PAD='PAD', UNK='UNK'):
+    f = open(embedding_file_path, 'r', encoding='utf-8').readlines()
+    word_dict = {}
+    embedding = []
+    for i, line in enumerate(f):
+        split_line = line.split()
+        word = split_line[0]
+        embedding.append(np.array([float(val) for val in split_line[1:]]))
+        word_dict[word] = i
+    embedding = np.array(embedding)
+
+    word_dict[PAD] = len(word_dict)
+    word_dict[UNK] = len(word_dict)
+
+    dict_len, embed_size = embedding.shape
+    scale = np.sqrt(3.0 / embed_size)
+    spec_word = np.random.uniform(-scale, scale, [2, embed_size])
+    embedding = np.concatenate([embedding, spec_word], axis=0).astype(np.float)
+
+    return word_dict, embedding

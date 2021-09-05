@@ -1,21 +1,20 @@
-from typing import Type, Any, Dict, List, Optional, Tuple, Union, Callable
 import logging
+from typing import Type, Any, Dict, Optional, Union, Callable
+
 import numpy as np
-from tqdm import tqdm, trange
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-
+from tqdm.auto import trange
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-from ..utils import cross_entropy_with_probs
 from ..backbone import BackBone, MLP
-from ..basemodel import BaseModel, BaseTorchModel
-from ..labelmodel import BaseLabelModel, MajorityVoting
+from ..basemodel import BaseTorchClassModel
 from ..dataset import BaseDataset, TorchDataset, sample_batch
 from ..dataset.utils import split_labeled_unlabeled
-
+from ..labelmodel import BaseLabelModel, MajorityVoting
+from ..utils import cross_entropy_with_probs
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +25,8 @@ def contrastive_loss(inputs, feat, margin=2.0, device=None):
     index = torch.randperm(batch_size).to(device)
     input_y = inputs[index, :]
     feat_y = feat[index, :]
-    argmax_x = torch.argmax(inputs, dim = 1)
-    argmax_y = torch.argmax(input_y, dim = 1)
+    argmax_x = torch.argmax(inputs, dim=1)
+    argmax_y = torch.argmax(input_y, dim=1)
     agreement = torch.FloatTensor([1 if x == True else 0 for x in argmax_x == argmax_y]).to(device)
     distances = (feat - feat_y).pow(2).mean(1)  # squared distances
     losses = 0.5 * (agreement * distances + (1 + -1 * agreement) * F.relu(margin - (distances + 1e-9).sqrt()).pow(2))
@@ -46,26 +45,26 @@ def soft_frequency(logits, probs=False):
     else:
         y = logits
     f = torch.sum(y, dim=0)
-    t = y**power / f
+    t = y ** power / f
     t = t + 1e-10
-    p = t/torch.sum(t, dim=-1, keepdim=True)
+    p = t / torch.sum(t, dim=-1, keepdim=True)
     return p
 
 
-def calc_loss(inputs, target, reg = 0.01):
+def calc_loss(inputs, target, reg=0.01):
     n_classes_ = inputs.shape[-1]
     loss_fn = nn.KLDivLoss(reduction='none')
     target = F.softmax(target, dim=1)
-    weight = torch.sum(-torch.log(target+1e-6) * target, dim = 1)
+    weight = torch.sum(-torch.log(target + 1e-6) * target, dim=1)
     weight = 1 - weight / np.log(n_classes_)
-    target = soft_frequency(target, probs = True)
+    target = soft_frequency(target, probs=True)
     loss_batch = loss_fn(inputs, target)
     l = torch.sum(loss_batch * weight.unsqueeze(1))
     l -= reg * (torch.sum(inputs) + np.log(n_classes_) * n_classes_)
     return l
 
 
-class Cosine(BaseTorchModel):
+class Cosine(BaseTorchClassModel):
     def __init__(self,
                  lr: Optional[float] = 1e-5,
                  l2: Optional[float] = 1e-4,
@@ -82,29 +81,29 @@ class Cosine(BaseTorchModel):
                  ):
         super().__init__()
         self.hyperparas = {
-            'lr': lr,
-            'l2': l2,
-            'teacher_update': teacher_update,
-            'margin': margin,
-            'mu': mu,
-            'thresh': thresh,
-            'lamda': lamda,
-            'batch_size': batch_size,
+            'lr'             : lr,
+            'l2'             : l2,
+            'teacher_update' : teacher_update,
+            'margin'         : margin,
+            'mu'             : mu,
+            'thresh'         : thresh,
+            'lamda'          : lamda,
+            'batch_size'     : batch_size,
             'test_batch_size': test_batch_size,
             'real_batch_size': real_batch_size,
-            'n_steps': n_steps,
-            'binary_mode': binary_mode,
+            'n_steps'        : n_steps,
+            'binary_mode'    : binary_mode,
         }
         self.model: Optional[BackBone] = None
         self.label_model: Optional[BaseLabelModel] = None
 
     def fit(self,
-            dataset_train:BaseDataset,
+            dataset_train: BaseDataset,
             y_train: Optional[np.ndarray] = None,
             dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
             pretrained_model: str = None,
-            label_model_class: Type[BaseLabelModel] =  MajorityVoting,
+            label_model_class: Type[BaseLabelModel] = MajorityVoting,
             label_model_config: Dict = None,
             backbone_class: Type[BackBone] = MLP,
             backbone_config: Dict = None,
@@ -146,7 +145,7 @@ class Cosine(BaseTorchModel):
         valid_flag = self._init_valid_step(dataset_valid, y_valid, metric, direction, patience, tolerance)
         history = {}
 
-        n_class = len(dataset_train.id2label)
+        n_class = dataset_train.n_class
         backbone_config['n_class'] = n_class
         backbone_config['binary_mode'] = hyperparas['binary_mode']
         if dataset_train.features is not None:
@@ -177,7 +176,7 @@ class Cosine(BaseTorchModel):
 
             history_pretrain = {}
             last_step_log = {}
-            with trange(n_steps, ncols=200, desc="training Cosine model: pretrain", unit="steps", disable=not verbose) as pbar:
+            with trange(n_steps, desc="[TRAIN] COSINE pretrain stage", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
                 cnt = 0
                 step = 0
                 model.train()
@@ -206,16 +205,19 @@ class Cosine(BaseTorchModel):
                                 break
 
                             history[step] = {
-                                'loss': loss.item(),
-                                f'val_{metric}': metric_value,
+                                'loss'              : loss.item(),
+                                f'val_{metric}'     : metric_value,
                                 f'best_val_{metric}': self.best_metric_value,
-                                f'best_step': self.best_step,
+                                f'best_step'        : self.best_step,
                             }
                             last_step_log.update(history[step])
 
                         last_step_log['loss'] = loss.item()
                         pbar.update()
                         pbar.set_postfix(ordered_dict=last_step_log)
+
+                        if step >= n_steps:
+                            break
 
             if valid_flag:
                 self.model.load_state_dict(self.best_model)
@@ -232,7 +234,7 @@ class Cosine(BaseTorchModel):
             self._valid_step(-1)
         history_selftrain = {}
         last_step_log = {}
-        with trange(n_steps, ncols=200, desc="training Cosine model: distillation", unit="steps", disable=not verbose) as pbar:
+        with trange(n_steps, desc="[TRAIN] COSINE distillation stage", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
             cnt = 0
             step = 0
             model.train()
@@ -288,12 +290,12 @@ class Cosine(BaseTorchModel):
                             break
 
                         history_selftrain[step] = {
-                            'loss': loss.item(),
-                            'loss_contrast': loss_contrast.item(),
-                            'loss_distill': loss_distill.item(),
-                            f'val_{metric}': metric_value,
+                            'loss'              : loss.item(),
+                            'loss_contrast'     : loss_contrast.item(),
+                            'loss_distill'      : loss_distill.item(),
+                            f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            f'best_step': self.best_step,
+                            f'best_step'        : self.best_step,
                         }
                         last_step_log.update(history_selftrain[step])
 
@@ -302,6 +304,9 @@ class Cosine(BaseTorchModel):
                     last_step_log['loss_distill'] = loss_distill.item()
                     pbar.update()
                     pbar.set_postfix(ordered_dict=last_step_log)
+
+                    if step >= n_steps:
+                        break
 
         self._finalize()
 
@@ -319,7 +324,7 @@ class Cosine(BaseTorchModel):
                 output = model(batch)
                 if output.shape[1] == 1:
                     output = torch.sigmoid(output)
-                    proba = torch.cat([1-output, output], -1)
+                    proba = torch.cat([1 - output, output], -1)
                 else:
                     proba = F.softmax(output, dim=-1)
                 weight = torch.sum(-torch.log(proba + 1e-5) * proba, dim=1)
@@ -336,5 +341,3 @@ class Cosine(BaseTorchModel):
         y_pseudo = torch.cat(y_pseudo)
         self.model.train()
         return sub_dataset, y_pseudo
-
-

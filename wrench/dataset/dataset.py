@@ -1,11 +1,11 @@
 from typing import Any, Optional
+
 import numpy as np
 import torch
 
+from .basedataset import BaseDataset
 from .utils import bag_of_words_extractor, tf_idf_extractor, sentence_transformer_extractor, \
     bert_text_extractor, bert_relation_extractor, bert_entity_extractor, elmo_sentence_extractor
-from .basedataset import BaseDataset
-
 
 
 class NumericDataset(BaseDataset):
@@ -20,10 +20,10 @@ class NumericDataset(BaseDataset):
         Parameters
         ----------
         """
-        self.features = np.array(list(map(lambda x:x['feature'], self.examples)), dtype=np.float32)
+        self.features = np.array(list(map(lambda x: x['feature'], self.examples)), dtype=np.float32)
 
         if return_extractor:
-            return lambda y:np.array(list(map(lambda x:x['feature'], y)), dtype=np.float32)
+            return lambda y: np.array(list(map(lambda x: x['feature'], y)), dtype=np.float32)
 
 
 class TextDataset(BaseDataset):
@@ -128,9 +128,9 @@ class EntityDataset(BaseDataset):
 
         if extract_fn == 'bert':
             data, extractor = bert_entity_extractor(self.examples,
-                                                      device=device,
-                                                      model_name=model_name,
-                                                      **kwargs)
+                                                    device=device,
+                                                    model_name=model_name,
+                                                    **kwargs)
         else:
             raise NotImplementedError(f'feature extraction method {extract_fn} is not supported!')
 

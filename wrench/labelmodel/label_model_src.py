@@ -3,10 +3,11 @@ https://github.com/BatsResearch/labelmodels
 """
 
 import logging
+
 import numpy as np
-from scipy import sparse
 import torch
 import torch.nn as nn
+from scipy import sparse
 
 
 class LabelModel(nn.Module):
@@ -14,6 +15,7 @@ class LabelModel(nn.Module):
     Concrete subclasses should implement at least forward(),
     estimate_label_model(), and get_label_distribution().
     """
+
     def forward(self, *args):
         """Computes the marginal log-likelihood of a batch of observed
         function outputs provided as input.
@@ -107,6 +109,7 @@ class ClassConditionalLabelModel(LabelModel):
           has a certain value. It is assumed that when a labeling function makes
           a mistake, the label it outputs is chosen uniformly at random
     """
+
     def __init__(self, num_classes, num_lfs, init_acc, acc_prior):
         """Constructor.
         Initializes label source accuracies argument and propensities uniformly.

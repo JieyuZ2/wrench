@@ -332,3 +332,7 @@ label_model = FlyingSquid()
 label_model.fit(dataset_train=L_train, dataset_valid=valid_data)
 target_value = label_model.test(L_test, metric_fn='auc')
 ```
+
+## 🔧  Contributing Dataset and Model
+
+We sincerely welcome any contribution to the datasets or models!

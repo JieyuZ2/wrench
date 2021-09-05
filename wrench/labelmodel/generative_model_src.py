@@ -1,25 +1,23 @@
 """copied from https://github.com/snorkel-team/snorkel-extraction/blob/master/snorkel/learning/gen_learning.py"""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import *
-from future.utils import iteritems
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from numba import jit
+import os
+import random
+from builtins import *
+from copy import copy
+from distutils.version import StrictVersion
+
 import numbskull
+import numpy as np
+import scipy.sparse as sparse
+from future.utils import iteritems
+from numba import jit
 from numbskull import NumbSkull
 from numbskull.inference import FACTORS
 from numbskull.numbskulltypes import Weight, Variable, Factor, FactorToVar
-import numpy as np
-import random
-import scipy.sparse as sparse
-from copy import copy
 from pandas import DataFrame
-from distutils.version import StrictVersion
 from six.moves.cPickle import dump, load
-import os
 
 DEP_SIMILAR = 0
 DEP_FIXING = 1
@@ -54,7 +52,7 @@ class SrcGenerativeModel:
         if StrictVersion(numbskull_version) < StrictVersion(numbskull_require):
             raise ValueError(
                 "Snorkel requires Numbskull version %s, but version %s is installed." % (
-                numbskull_require, numbskull_version))
+                    numbskull_require, numbskull_version))
 
         self.class_prior = class_prior
         self.lf_prior = lf_prior
@@ -372,9 +370,9 @@ class SrcGenerativeModel:
                 coverage = 1 - (count[i, 0, 2] + count[i, 1, 2])
                 stats.append({
                     "Precision": tp / (tp + fp),
-                    "Recall": tp / count[i, 1, :].sum(),
-                    "Accuracy": (tp + tn) / coverage,
-                    "Coverage": coverage
+                    "Recall"   : tp / count[i, 1, :].sum(),
+                    "Accuracy" : (tp + tn) / coverage,
+                    "Coverage" : coverage
                 })
             else:
                 correct = sum([count[i, j, j] for j in range(cardinality)])
@@ -517,10 +515,10 @@ class SrcGenerativeModel:
         :param deps: iterable of tuples of the form (lf_1, lf_2, type)
         """
         dep_name_map = {
-            DEP_SIMILAR: 'dep_similar',
-            DEP_FIXING: 'dep_fixing',
+            DEP_SIMILAR    : 'dep_similar',
+            DEP_FIXING     : 'dep_fixing',
             DEP_REINFORCING: 'dep_reinforcing',
-            DEP_EXCLUSIVE: 'dep_exclusive'
+            DEP_EXCLUSIVE  : 'dep_exclusive'
         }
 
         for dep_name in SrcGenerativeModel.dep_names:
@@ -696,10 +694,10 @@ class SrcGenerativeModel:
                                                              nfactors_for_lf)
 
         optional_name_map = {
-            'lf_prior':
+            'lf_prior'           :
                 ('DP_GEN_LF_PRIOR', (
                     lambda m, n, i, j: m + n * i + j,)),
-            'lf_propensity':
+            'lf_propensity'      :
                 ('DP_GEN_LF_PROPENSITY', (
                     lambda m, n, i, j: m + n * i + j,)),
             'lf_class_propensity':
@@ -718,11 +716,11 @@ class SrcGenerativeModel:
 
         # Factors for labeling function dependencies
         dep_name_map = {
-            'dep_similar':
+            'dep_similar'    :
                 ('DP_GEN_DEP_SIMILAR', (
                     lambda m, n, i, j, k: m + n * i + j,
                     lambda m, n, i, j, k: m + n * i + k)),
-            'dep_fixing':
+            'dep_fixing'     :
                 ('DP_GEN_DEP_FIXING', (
                     lambda m, n, i, j, k: i,
                     lambda m, n, i, j, k: m + n * i + j,
@@ -732,7 +730,7 @@ class SrcGenerativeModel:
                     lambda m, n, i, j, k: i,
                     lambda m, n, i, j, k: m + n * i + j,
                     lambda m, n, i, j, k: m + n * i + k)),
-            'dep_exclusive':
+            'dep_exclusive'  :
                 ('DP_GEN_DEP_EXCLUSIVE', (
                     lambda m, n, i, j, k: m + n * i + j,
                     lambda m, n, i, j, k: m + n * i + k))
@@ -867,7 +865,7 @@ class SrcGenerativeModel:
         save_path2 = os.path.join(save_dir, "{0}.hps.pkl".format(model_name))
         with open(save_path2, 'wb') as f:
             dump({
-                'cardinality': self.cardinality,
+                'cardinality'          : self.cardinality,
                 'cardinality_for_stats': self.cardinality_for_stats
             }, f)
 

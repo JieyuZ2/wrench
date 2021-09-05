@@ -1,13 +1,12 @@
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
 import logging
+from typing import Any, List, Optional, Union
+
 import numpy as np
 import torch
-
 from metal.label_model import LabelModel as LabelModel_
 
-from .baselabelmodel import BaseLabelModel
+from .baselabelmodel import BaseLabelModel, check_weak_labels
 from ..dataset import BaseDataset
-from .utils import check_weak_labels
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +64,12 @@ class LabelModel(LabelModel_):
             # All maximal cliques are +1
             for i in self.c_tree.nodes():
                 node = self.c_tree.node[i]
-                jtm[node["start_index"] : node["end_index"]] = 1
+                jtm[node["start_index"]: node["end_index"]] = 1
 
             # All separator sets are -1
             for i, j in self.c_tree.edges():
                 edge = self.c_tree[i][j]
-                jtm[edge["start_index"] : edge["end_index"]] = 1
+                jtm[edge["start_index"]: edge["end_index"]] = 1
         else:
             jtm = np.ones(L_aug.shape[1])
 
@@ -78,7 +77,6 @@ class LabelModel(LabelModel_):
         X = np.exp(L_aug @ np.diag(jtm) @ np.log(mu) + np.log(self.p))
         Z = np.tile(X.sum(axis=1).reshape(-1, 1), self.k)
         return X / Z
-
 
 
 class MeTaL(BaseLabelModel):
@@ -89,32 +87,40 @@ class MeTaL(BaseLabelModel):
                  **kwargs: Any):
         super().__init__()
         self.hyperparas = {
-            'lr': lr,
-            'l2': l2,
+            'lr'      : lr,
+            'l2'      : l2,
             'n_epochs': n_epochs,
         }
         self.model = None
 
     def fit(self,
-            dataset_train:Union[BaseDataset, np.ndarray],
-            y_train: Optional[np.ndarray] = None,
+            dataset_train: Union[BaseDataset, np.ndarray],
             dataset_valid: Optional[Union[BaseDataset, np.ndarray]] = None,
             y_valid: Optional[np.ndarray] = None,
+            n_class: Optional[int] = None,
             balance: Optional[np.ndarray] = None,
             dependency_graph: Optional[List] = [],
             verbose: Optional[bool] = False,
-            seed: int =None,
+            seed: int = None,
             **kwargs: Any):
 
         self._update_hyperparas(**kwargs)
+        if isinstance(dataset_train, BaseDataset):
+            if n_class is not None:
+                assert n_class == dataset_train.n_class
+            else:
+                n_class = dataset_train.n_class
+        if n_class is not None and balance is not None:
+            assert len(balance) == n_class
 
         L = check_weak_labels(dataset_train)
-        balance = balance or self._init_balance(L, dataset_valid, y_valid)
-        cardinality = len(balance)
+        balance = balance or self._init_balance(L, dataset_valid, y_valid, n_class)
+        n_class = len(balance)
+        self.n_class = n_class
 
         seed = seed or np.random.randint(1e6)
-        label_model = LabelModel(k=cardinality, seed=seed)
-        label_model.train_model(L_train=L+1, class_balance=balance, deps=dependency_graph,
+        label_model = LabelModel(k=n_class, seed=seed)
+        label_model.train_model(L_train=L + 1, class_balance=balance, deps=dependency_graph,
                                 n_epochs=self.hyperparas['n_epochs'],
                                 lr=self.hyperparas['lr'],
                                 l2=self.hyperparas['l2'],
@@ -122,6 +128,6 @@ class MeTaL(BaseLabelModel):
 
         self.model = label_model
 
-    def predict_proba(self, dataset:Union[BaseDataset, np.ndarray], **kwargs: Any) -> np.ndarray:
+    def predict_proba(self, dataset: Union[BaseDataset, np.ndarray], **kwargs: Any) -> np.ndarray:
         L = check_weak_labels(dataset)
-        return self.model.predict_proba(L+1)
+        return self.model.predict_proba(L + 1)

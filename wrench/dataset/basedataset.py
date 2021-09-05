@@ -1,14 +1,15 @@
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
-import json, pickle
 import copy
+import json
 import logging
+import pickle
+from abc import ABC, abstractmethod
 from pathlib import Path
-import numpy as np
-from tqdm import tqdm
+from typing import Any, List, Optional, Union, Callable
 
+import numpy as np
 from sklearn import preprocessing
 from snorkel.labeling import LFAnalysis
+from tqdm.auto import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ class BaseDataset(ABC):
         if path is not None and split is not None:
             self.load(path=path, split=split)
             self.load_features(feature_cache_name)
+            self.n_class = len(self.id2label)
+            self.n_lf = len(self.weak_labels[0])
 
     def __len__(self):
         return len(self.ids)
@@ -95,7 +98,6 @@ class BaseDataset(ABC):
             self.weak_labels.append(item['weak_labels'])
             self.examples.append(item['data'])
 
-
         label_path = self.path / f'label.json'
         self.id2label = {int(k): v for k, v in json.load(open(label_path, 'r')).items()}
 
@@ -117,7 +119,7 @@ class BaseDataset(ABC):
         if isinstance(extract_fn, Callable):
             self.features = extract_fn(self.examples)
         else:
-            extractor =  self.extract_feature_(extract_fn=extract_fn, return_extractor=return_extractor, **kwargs)
+            extractor = self.extract_feature_(extract_fn=extract_fn, return_extractor=return_extractor, **kwargs)
             if normalize:
                 features = self.features
                 scaler = preprocessing.StandardScaler().fit(features)
@@ -165,15 +167,15 @@ class BaseDataset(ABC):
         return self.create_subset(idx)
 
     def get_covered_subset(self):
-        idx = [i for i in range(len(self)) if np.any(np.array(self.weak_labels[i])!=-1)]
+        idx = [i for i in range(len(self)) if np.any(np.array(self.weak_labels[i]) != -1)]
         return self.create_subset(idx)
 
     def get_conflict_labeled_subset(self):
-        idx = [i for i in range(len(self)) if len({l for l in set(self.weak_labels[i]) if l!=-1}) > 1]
+        idx = [i for i in range(len(self)) if len({l for l in set(self.weak_labels[i]) if l != -1}) > 1]
         return self.create_subset(idx)
 
     def get_agreed_labeled_subset(self):
-        idx = [i for i in range(len(self)) if len({l for l in set(self.weak_labels[i]) if l!=-1}) == 1]
+        idx = [i for i in range(len(self)) if len({l for l in set(self.weak_labels[i]) if l != -1}) == 1]
         return self.create_subset(idx)
 
     def lf_summary(self):

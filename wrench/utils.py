@@ -1,12 +1,12 @@
-from typing import List, Mapping, Optional
 import random
-import numpy as np
+from typing import Dict, Optional
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 
 from .backbone import BertRelationClassifier, BertTextClassifier, BertEntityClassifier
-from .dataset import BaseDataset, TextDataset, RelationDataset, EntityDataset
+from .dataset import BERTTorchTextClassDataset, BERTTorchRelationClassDataset, BaseDataset, TextDataset, RelationDataset, EntityDataset
 
 
 def set_seed(seed):
@@ -26,11 +26,21 @@ def get_bert_model_class(dataset: BaseDataset):
     raise NotImplementedError
 
 
+def get_bert_torch_dataset_class(dataset: BaseDataset):
+    if isinstance(dataset, TextDataset):
+        return BERTTorchTextClassDataset
+    if isinstance(dataset, RelationDataset):
+        return BERTTorchRelationClassDataset
+    if isinstance(dataset, EntityDataset):
+        raise NotImplementedError
+    raise NotImplementedError
+
+
 def cross_entropy_with_probs(
-    input: torch.Tensor,
-    target: torch.Tensor,
-    weight: Optional[torch.Tensor] = None,
-    reduction: str = "mean",
+        input: torch.Tensor,
+        target: torch.Tensor,
+        weight: Optional[torch.Tensor] = None,
+        reduction: str = "mean",
 ) -> torch.Tensor:
     """Calculate cross-entropy loss when targets are probabilities (floats), not ints.
 
@@ -94,3 +104,20 @@ def cross_entropy_with_probs(
         return cum_losses.sum()
     else:
         raise ValueError("Keyword 'reduction' must be one of ['none', 'mean', 'sum']")
+
+
+def construct_collate_fn_trunc_pad(mask: str):
+    def collate_fn_trunc_pad(batch: Dict):
+        batch = torch.utils.data._utils.collate.default_collate(batch)
+        batch_mask = batch[mask]
+        batch_max_seq = batch_mask.sum(dim=1).max()
+        for k, v in batch.items():
+            ndim = batch[k].ndim
+            if ndim > 1:
+                if ndim == 2:
+                    batch[k] = v[:, :batch_max_seq]
+                else:
+                    batch[k] = v[:, :batch_max_seq, :]
+        return batch
+
+    return collate_fn_trunc_pad
