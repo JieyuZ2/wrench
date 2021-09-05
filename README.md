@@ -173,6 +173,8 @@ metrics = meter.get_results()
 pprint.pprint(metrics)
 ```
 
+For detailed guidance of `grid_search`, please check out [this wiki page](https://github.com/JieyuZ2/wrench/wiki/Hyperparameter-Search).
+
 
 ## 🔧  Run a standard supervised learning pipeline
 
