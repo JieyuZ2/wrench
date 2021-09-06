@@ -109,6 +109,7 @@ The detailed documentation is coming soon.
 | LSTM-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L45) |
 | BERT-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L210) |
 
+### classification-to-sequence tagging wrapper:
 Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/seq_wrapper.py#L43) that adaptes label model for classification task to sequence tagging task.
 
 # 🔧  Quick examples
