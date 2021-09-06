@@ -338,6 +338,14 @@ label_model.fit(dataset_train=L_train, dataset_valid=valid_data)
 target_value = label_model.test(L_test, metric_fn='auc')
 ```
 
+## 🔧  Contact
+
+Contact person: Jieyu Zhang, [jieyuzhang97@gmail.com](mailto:jieyuzhang97@gmail.com)
+
+Don't hesitate to send us an e-mail if you have any question.
+
+We're also open to any collaboration!
+
 ## 🔧  Contributing Dataset and Model
 
 We sincerely welcome any contribution to the datasets or models!
