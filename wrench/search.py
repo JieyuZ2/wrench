@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 def quit_function(fn_name):
-    # raise Exception(f'[TIMEOUT] {fn_name} take too long!')
     print(f'[TIMEOUT] {fn_name} take too long!', file=sys.stderr)
     sys.stderr.flush()  # Python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
@@ -28,8 +27,7 @@ def quit_function(fn_name):
 
 def exit_after(s):
     '''
-    use as decorator to exit process if
-    function takes longer than s seconds
+    use as decorator to exit process if function takes longer than s seconds
     '''
 
     def outer(fn):
@@ -48,6 +46,27 @@ def exit_after(s):
         return inner
 
     return outer
+
+
+class StopWhenNotImproved:
+    def __init__(self, patience: int):
+        self.patience = patience
+        self.no_improve_cnt = 0
+        self.best_value = None
+
+    def __call__(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> None:
+        if trial.state == optuna.trial.TrialState.COMPLETE:
+            current_value = trial.value
+            if self.best_value is None:
+                self.best_value = current_value
+            else:
+                if current_value > self.best_value:
+                    self.best_value = current_value
+                    self.no_improve_cnt = 0
+                else:
+                    self.no_improve_cnt += 1
+                    if self.no_improve_cnt >= self.patience:
+                        study.stop()
 
 
 class RandomGridSampler(GridSampler):
@@ -108,28 +127,42 @@ def grid_search(model: BaseModel,
                 y_train=None,
                 y_valid=None,
                 process_fn: Callable = single_process,
+                filter_fn: Optional[Callable] = None,
                 metric: Optional[Union[str, Callable]] = 'f1_macro',
                 direction: Optional[str] = 'auto',
                 n_repeats: Optional[int] = 1,
                 n_trials: Optional[int] = 100,
                 n_jobs: Optional[int] = 1,
+                study_patience: Optional[int] = -1,
                 trial_timeout: Optional[int] = -1,
                 parallel: Optional[bool] = False,
-                filter_fn: Optional[Callable] = None,
                 study_name: Optional[str] = None,
                 **kwargs: Any):
     if direction == 'auto':
         direction = metric_to_direction(metric)
-    worker = partial(process_fn, model=model, dataset_train=dataset_train, y_train=y_train,
-                     dataset_valid=dataset_valid, y_valid=y_valid, metric=metric, direction=direction, kwargs=kwargs)
-    study = optuna.create_study(study_name=study_name, sampler=RandomGridSampler(search_space, filter_fn=filter_fn), direction=direction)
+    worker = partial(process_fn,
+                     model=model,
+                     dataset_train=dataset_train,
+                     y_train=y_train,
+                     dataset_valid=dataset_valid,
+                     y_valid=y_valid,
+                     metric=metric,
+                     direction=direction,
+                     kwargs=kwargs)
+    study = optuna.create_study(study_name=study_name,
+                                sampler=RandomGridSampler(search_space, filter_fn=filter_fn),
+                                direction=direction
+                                )
+    callbacks = []
+    if study_patience > 0:
+        callbacks.append(StopWhenNotImproved(patience=study_patience))
 
     if parallel:
         if trial_timeout > 0: warnings.warn('Parallel searching does not support trial time out!')
         ctx = multiprocessing.get_context("spawn")
         pool = ctx.Pool(n_repeats)
 
-        def parallel_objective(trial):
+        def parallel_objective(trial: Trial):
             suggestions = fetch_hyperparas_suggestions(search_space, trial)
             metric_value = 0
             for val in tqdm(pool.imap_unordered(worker, [(suggestions, i) for i in range(n_repeats)]), total=n_repeats):
@@ -137,23 +170,24 @@ def grid_search(model: BaseModel,
             value = metric_value / n_repeats
             return value
 
-        study.optimize(parallel_objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,))
+        study.optimize(parallel_objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,), callbacks=callbacks)
 
     else:
 
         @exit_after(trial_timeout)
-        def objective(trial):
+        def objective(trial: Trial):
             try:
                 suggestions = fetch_hyperparas_suggestions(search_space, trial)
                 metric_value = 0
                 for i in trange(n_repeats):
-                    metric_value += worker((suggestions, i))
+                    val = worker((suggestions, i))
+                    metric_value += val
                 value = metric_value / n_repeats
                 return value
             except KeyboardInterrupt:
                 raise Exception('[KeyboardInterrupt] may due to timeout')
 
-        study.optimize(objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,))
+        study.optimize(objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,), callbacks=callbacks)
 
     logger.info(f'[END: BEST VAL / PARAMS] Best value: {study.best_value}, Best paras: {study.best_params}')
     return study.best_params
