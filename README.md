@@ -5,6 +5,9 @@
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=purple)](https://www.python.org/)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/JieyuZ2/wrench/commits/main)
 [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/JieyuZ2/wrench)
+![visitors](https://visitor-badge.glitch.me/badge?page_id=JieyuZ2/wrench) 
+![GitHub stars](https://img.shields.io/github/stars/JieyuZ2/wrench.svg?color=green)  
+![GitHub forks](https://img.shields.io/github/forks/JieyuZ2/wrench?color=9cf)
 
 
 ## 🔧 What is it?
