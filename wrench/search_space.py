@@ -75,8 +75,8 @@ SEARCH_SPACE = {
         'num_train_epochs'      : [50],
     },
     'HMM'                : {
-        'redundancy_factor': [0.1, 0.3, 0.5, 0.7, 0.9],
-        'n_epochs'         : [2, 5, 10, 20],
+        'redundancy_factor': [0.0, 0.1, 0.3, 0.5, 0.7, 0.9],
+        'n_epochs'         : [50],
     },
 
     'LSTMTaggerModel'    : {

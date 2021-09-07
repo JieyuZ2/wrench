@@ -5,7 +5,7 @@ import torch
 
 from .basedataset import BaseDataset
 from .utils import bag_of_words_extractor, tf_idf_extractor, sentence_transformer_extractor, \
-    bert_text_extractor, bert_relation_extractor, bert_entity_extractor, elmo_sentence_extractor
+    bert_text_extractor, bert_relation_extractor, bert_entity_extractor
 
 
 class NumericDataset(BaseDataset):
@@ -55,8 +55,6 @@ class TextDataset(BaseDataset):
                                                              device=device,
                                                              model_name=model_name,
                                                              **kwargs)
-        elif extract_fn == 'elmo':
-            data, extractor = elmo_sentence_extractor(self.examples, **kwargs)
         elif extract_fn == 'bert':
             data, extractor = bert_text_extractor(self.examples,
                                                   device=device,

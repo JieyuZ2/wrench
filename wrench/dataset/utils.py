@@ -2,11 +2,6 @@ import warnings
 from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import tensorflow.compat.v1 as tf
-
-tf.disable_v2_behavior()
-import tensorflow_hub as hub
-
 import numpy as np
 import torch
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -229,28 +224,6 @@ def tf_idf_extractor(data: List[Dict], **kwargs: Any):
         return tfidf_transformer.transform(corpus).toarray().astype('float32')
 
     return tfidf, extractor
-
-
-def elmo_sentence_extractor(data: List[Dict], batch_size=128, **kwargs: Any):
-    def extractor(data: List[Dict]):
-        corpus = list(map(lambda x: x['text'], data))
-        sess_config = tf.ConfigProto()
-        sess_config.gpu_options.allow_growth = True
-        module_url = "https://tfhub.dev/google/elmo/2"
-        elmo = hub.Module(module_url, trainable=True)
-        tf.logging.set_verbosity(tf.logging.ERROR)
-        with tf.Session(config=sess_config) as session:
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            message_embeddings = []
-            for i in tqdm(range(0, len(corpus), batch_size)):
-                message_batch = corpus[i:i + batch_size]
-                # length_batch = message_lengths[i:i+batch_size]
-                embeddings_batch = session.run(elmo(message_batch, signature="default", as_dict=True))["default"]
-                # embeddings_batch = get_embeddings_list(embeddings_batch, length_batch, ELMO_EMBED_SIZE)
-                message_embeddings.extend(embeddings_batch)
-        return np.stack(message_embeddings)
-
-    return extractor(data), extractor
 
 
 def sentence_transformer_extractor(data: List[Dict], model_name: Optional[str] = 'paraphrase-distilroberta-base-v1', **kwargs: Any):
