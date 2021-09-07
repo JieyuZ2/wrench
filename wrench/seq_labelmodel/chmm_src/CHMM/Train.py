@@ -223,7 +223,7 @@ class CHMMTrainer:
 
             # ----- log history -----
             valid_results.append(results)
-            if tolerance_epoch > self._config.num_valid_tolerance:
+            if tolerance_epoch >= self._config.num_valid_tolerance:
                 self._logger.info("Training stopped because of exceeding tolerance")
                 break
 
