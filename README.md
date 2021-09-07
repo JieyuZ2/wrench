@@ -5,6 +5,7 @@
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=purple)](https://www.python.org/)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/JieyuZ2/wrench/commits/main)
 [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/JieyuZ2/wrench)
+![visitors](https://visitor-badge.glitch.me/badge?page_id=JieyuZ2/wrench) ![GitHub stars](https://img.shields.io/github/stars/JieyuZ2/wrench.svg?color=green)  ![GitHub forks](https://img.shields.io/github/forks/JieyuZ2/wrench?color=9cf)
 
 
 ## 🔧 What is it?
@@ -109,6 +110,7 @@ The detailed documentation is coming soon.
 | LSTM-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L45) |
 | BERT-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L210) |
 
+### classification-to-sequence-tagging wrapper:
 Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/seq_wrapper.py#L43) that adaptes label model for classification task to sequence tagging task.
 
 # 🔧  Quick examples
@@ -336,6 +338,14 @@ label_model = FlyingSquid()
 label_model.fit(dataset_train=L_train, dataset_valid=valid_data)
 target_value = label_model.test(L_test, metric_fn='auc')
 ```
+
+## 🔧  Contact
+
+Contact person: Jieyu Zhang, [jieyuzhang97@gmail.com](mailto:jieyuzhang97@gmail.com)
+
+Don't hesitate to send us an e-mail if you have any question.
+
+We're also open to any collaboration!
 
 ## 🔧  Contributing Dataset and Model
 
