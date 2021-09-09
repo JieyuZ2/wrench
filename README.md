@@ -38,7 +38,7 @@ cd wrench
 conda env create -f environment.yml
 source activate wrench
 ```
-If this not working, check out this [wiki page](https://github.com/JieyuZ2/wrench/wiki/Environment-Installation)
+If this not working or you want to use only a subset of modules of Wrench, check out this [wiki page](https://github.com/JieyuZ2/wrench/wiki/Environment-Installation)
 
 ## 🔧 Available Datasets
 
