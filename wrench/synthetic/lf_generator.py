@@ -364,7 +364,7 @@ class AbstractLFGenerator(ABC):
         return np.var(acc_l)
 
     def check_candidate_lfs_enough_(self, n_lfs: Union[int, List[int]]):
-        if isinstance(n_lfs, Number):
+        if isinstance(n_lfs, int):
             assert sum(map(len, self.label_to_candidate_lfs.values())) > n_lfs, NoEnoughLFError()
         else:
             assert len(n_lfs) == self.n_class
@@ -398,7 +398,6 @@ class AbstractLFGenerator(ABC):
             candidate_lfs = self.return_candidate_lfs()
             lfs = list(self.generator.choice(candidate_lfs, n_lfs, replace=duplicated_lf))
         else:
-            assert len(n_lfs) == self.n_class
             labels = list(range(self.n_class))
             lfs = []
             for label, n_lfs_i in zip(labels, n_lfs):
@@ -471,7 +470,6 @@ class AbstractLFGenerator(ABC):
             lfs = [candidate_lfs[i] for i in lfs_idx]
 
         else:
-            assert len(n_lfs) == self.n_class
             labels = list(range(self.n_class))
             lfs = []
             # for label, n_lfs_i, n_correlated_lfs_i in zip(labels, n_lfs, n_correlated_lfs):

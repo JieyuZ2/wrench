@@ -447,7 +447,7 @@ class BaseConNet(BackBone, ABC):
         # feats [B, len, hidden_dim] -> [B, 2 * hidden_dim]
         batch_size = feats.size(0)
         start_feat = feats[:, 0, :]
-        end_feat = feats[torch.arange(batch_size), torch.sum(mask.long(), dim=1)-1]
+        end_feat = feats[torch.arange(batch_size), torch.sum(mask.long(), dim=1) - 1]
         return torch.cat([start_feat, end_feat], -1)
 
 

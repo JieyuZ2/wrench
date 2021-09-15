@@ -61,11 +61,13 @@ class LogRegModel(BaseTorchClassModel):
         train_dataloader = DataLoader(TorchDataset(dataset_train, n_data=n_steps * hyperparas['batch_size']),
                                       batch_size=hyperparas['batch_size'], shuffle=True)
 
-        if y_train is not None:
-            y_train = torch.Tensor(y_train).to(device)
+        if y_train is None:
+            y_train = dataset_train.labels
+        y_train = torch.Tensor(y_train).to(device)
 
-        if sample_weight is not None:
-            sample_weight = torch.FloatTensor(sample_weight).to(device)
+        if sample_weight is None:
+            sample_weight = np.ones(len(dataset_train))
+        sample_weight = torch.FloatTensor(sample_weight).to(device)
 
         n_class = dataset_train.n_class
         input_size = dataset_train.features.shape[1]
@@ -94,15 +96,9 @@ class LogRegModel(BaseTorchClassModel):
                     optimizer.zero_grad()
                     outputs = model(batch)
                     batch_idx = batch['ids'].to(device)
-                    if y_train is not None:
-                        target = y_train[batch_idx]
-                    else:
-                        target = batch['labels'].to(device)
-                    if sample_weight is not None:
-                        loss = cross_entropy_with_probs(outputs, target, reduction='none')
-                        loss = torch.mean(loss * sample_weight[batch_idx])
-                    else:
-                        loss = cross_entropy_with_probs(outputs, target, reduction='mean')
+                    target = y_train[batch_idx]
+                    loss = cross_entropy_with_probs(outputs, target, reduction='none')
+                    loss = torch.mean(loss * sample_weight[batch_idx])
                     loss.backward()
                     optimizer.step()
                     scheduler.step()

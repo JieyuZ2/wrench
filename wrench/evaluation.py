@@ -35,6 +35,20 @@ def f1_score_(y_true: np.ndarray, y_proba: np.ndarray, average: str, **kwargs):
     return cls_metric.f1_score(y_true, y_pred, average=average)
 
 
+def recall_score_(y_true: np.ndarray, y_proba: np.ndarray, average: str, **kwargs):
+    if average == 'binary' and len(np.unique(y_true)) > 2:
+        return 0.0
+    y_pred = probs_to_preds(y_proba, **kwargs)
+    return cls_metric.recall_score(y_true, y_pred, average=average)
+
+
+def precision_score_(y_true: np.ndarray, y_proba: np.ndarray, average: str, **kwargs):
+    if average == 'binary' and len(np.unique(y_true)) > 2:
+        return 0.0
+    y_pred = probs_to_preds(y_proba, **kwargs)
+    return cls_metric.precision_score(y_true, y_pred, average=average)
+
+
 def auc_score_(y_true: np.ndarray, y_proba: np.ndarray, **kwargs):
     if len(np.unique(y_true)) > 2:
         return 0.0
@@ -70,14 +84,22 @@ def recall_seq(y_true: List[List], y_pred: List[List], id2label: dict, strict=Tr
 
 
 METRIC = {
-    'acc'        : accuracy_score_,
-    'auc'        : auc_score_,
-    'f1_binary'  : partial(f1_score_, average='binary'),
-    'f1_micro'   : partial(f1_score_, average='micro'),
-    'f1_macro'   : partial(f1_score_, average='macro'),
-    'f1_weighted': partial(f1_score_, average='weighted'),
-    'logloss'    : cls_metric.log_loss,
-    'brier'      : brier_score_loss,
+    'acc'               : accuracy_score_,
+    'auc'               : auc_score_,
+    'f1_binary'         : partial(f1_score_, average='binary'),
+    'f1_micro'          : partial(f1_score_, average='micro'),
+    'f1_macro'          : partial(f1_score_, average='macro'),
+    'f1_weighted'       : partial(f1_score_, average='weighted'),
+    'recall_binary'     : partial(recall_score_, average='binary'),
+    'recall_micro'      : partial(recall_score_, average='micro'),
+    'recall_macro'      : partial(recall_score_, average='macro'),
+    'recall_weighted'   : partial(recall_score_, average='weighted'),
+    'precision_binary'  : partial(precision_score_, average='binary'),
+    'precision_micro'   : partial(precision_score_, average='micro'),
+    'precision_macro'   : partial(precision_score_, average='macro'),
+    'precision_weighted': partial(precision_score_, average='weighted'),
+    'logloss'           : cls_metric.log_loss,
+    'brier'             : brier_score_loss,
 }
 
 SEQ_METRIC = {

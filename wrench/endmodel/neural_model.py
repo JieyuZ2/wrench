@@ -65,8 +65,9 @@ class MLPModel(BaseTorchClassModel):
         train_dataloader = DataLoader(TorchDataset(dataset_train, n_data=n_steps * hyperparas['batch_size']),
                                       batch_size=hyperparas['batch_size'], shuffle=True)
 
-        if y_train is not None:
-            y_train = torch.Tensor(y_train).to(device)
+        if y_train is None:
+            y_train = dataset_train.labels
+        y_train = torch.Tensor(y_train).to(device)
 
         if sample_weight is None:
             sample_weight = np.ones(len(dataset_train))
@@ -101,13 +102,9 @@ class MLPModel(BaseTorchClassModel):
                     optimizer.zero_grad()
                     outputs = model(batch)
                     batch_idx = batch['ids'].to(device)
-                    if y_train is not None:
-                        target = y_train[batch_idx]
-                    else:
-                        target = batch['labels'].to(device)
+                    target = y_train[batch_idx]
                     loss = cross_entropy_with_probs(outputs, target, reduction='none')
-                    batch_sample_weights = sample_weight[batch_idx]
-                    loss = torch.mean(loss * batch_sample_weights)
+                    loss = torch.mean(loss * sample_weight[batch_idx])
                     loss.backward()
                     optimizer.step()
                     scheduler.step()

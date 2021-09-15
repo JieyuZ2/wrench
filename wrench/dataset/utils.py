@@ -4,10 +4,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from transformers import AutoTokenizer, AutoModel
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from tqdm.auto import tqdm
+from transformers import AutoTokenizer, AutoModel
 
 from .basedataset import BaseDataset
 
