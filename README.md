@@ -2,9 +2,10 @@
 <img style="vertical-align:middle" width="500" height="180" src="./images/wrench_logo.png" />
 </h1>
 
-[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=purple)](https://www.python.org/)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python3-1f425f.svg?color=purple)](https://www.python.org/)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/JieyuZ2/wrench/commits/main)
-[![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/JieyuZ2/wrench)
+[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![repo size](https://img.shields.io/github/repo-size/JieyuZ2/wrench.svg)](https://github.com/JieyuZ2/wrench/archive/master.zip)
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=JieyuZ2/wrench) ![GitHub stars](https://img.shields.io/github/stars/JieyuZ2/wrench.svg?color=green)  ![GitHub forks](https://img.shields.io/github/forks/JieyuZ2/wrench?color=9cf)
 
 
@@ -37,6 +38,7 @@ cd wrench
 conda env create -f environment.yml
 source activate wrench
 ```
+If this not working or you want to use only a subset of modules of Wrench, check out this [wiki page](https://github.com/JieyuZ2/wrench/wiki/Environment-Installation)
 
 ## 🔧 Available Datasets
 
