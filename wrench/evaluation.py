@@ -18,9 +18,9 @@ def metric_to_direction(metric: str) -> str:
     raise NotImplementedError(f'cannot automatically decide the direction for {metric}!')
 
 
-def brier_score_loss(golden_labels, prob_labels):
-    r = len(np.unique(golden_labels))
-    return np.mean((np.eye(r)[golden_labels] - prob_labels) ** 2)
+def brier_score_loss(y_true: np.ndarray, y_proba: np.ndarray, ):
+    r = len(np.unique(y_true))
+    return np.mean((np.eye(r)[y_true] - y_proba) ** 2)
 
 
 def accuracy_score_(y_true: np.ndarray, y_proba: np.ndarray, **kwargs):
@@ -52,7 +52,7 @@ def precision_score_(y_true: np.ndarray, y_proba: np.ndarray, average: str, **kw
 def auc_score_(y_true: np.ndarray, y_proba: np.ndarray, **kwargs):
     if len(np.unique(y_true)) > 2:
         return 0.0
-    fpr, tpr, thresholds = cls_metric.roc_curve(y_true, y_proba[:, 1], pos_label=1)
+    fpr, tpr, thresholds = cls_metric.roc_curve(y_true, y_proba[:, 1], pos_label=1, **kwargs)
     return cls_metric.auc(fpr, tpr)
 
 

@@ -4,8 +4,9 @@ from typing import Any, Optional, Union
 import numpy as np
 from snorkel.labeling.model import LabelModel
 
-from .baselabelmodel import BaseLabelModel, check_weak_labels
+from ..basemodel import BaseLabelModel
 from ..dataset import BaseDataset
+from ..dataset.utils import check_weak_labels
 
 logger = logging.getLogger(__name__)
 

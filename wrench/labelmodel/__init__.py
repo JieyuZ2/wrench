@@ -1,4 +1,3 @@
-from .baselabelmodel import BaseLabelModel, check_weak_labels
 from .dawid_skene import DawidSkene
 from .flyingsquid import FlyingSquid
 from .generative_model import GenerativeModel

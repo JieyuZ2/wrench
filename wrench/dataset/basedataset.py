@@ -40,36 +40,6 @@ class BaseDataset(ABC):
     def __len__(self):
         return len(self.ids)
 
-    def load_features(self, cache_name: Optional[str] = None):
-        """Method for loading data feature given the split and cache_name.
-
-        Parameters
-        ----------
-        cache_name
-            A str used to locate the feature file.
-        Returns
-        -------
-        features
-            np.ndarray
-        """
-        if cache_name is None:
-            self.features = None
-            return None
-
-        path = self.path / f'{self.split}_{cache_name}.pkl'
-        logger.info(f'loading features from {path}')
-        features = pickle.load(open(path, 'rb'))
-        self.features = features
-        return features
-
-    def save_features(self, cache_name: Optional[str] = None):
-        if cache_name is None:
-            return None
-        path = self.path / f'{self.split}_{cache_name}.pkl'
-        logger.info(f'saving features into {path}')
-        pickle.dump(self.features, open(path, 'wb'), protocol=4)
-        return path
-
     def load(self, path: Union[str, Path], split: str):
         """Method for loading data given the split.
 
@@ -102,6 +72,52 @@ class BaseDataset(ABC):
         self.id2label = {int(k): v for k, v in json.load(open(label_path, 'r')).items()}
 
         return self
+
+    def load_labeled_ids_and_lf_exemplars(self, path: Union[str, Path]):
+
+        path = Path(path)
+
+        assert self.split == 'train', 'labeled data can only be loaded by train'
+        logger.info(f'loading labeled ids and lf exemplars from {path}')
+        data = json.load(open(path, 'r'))
+        labeled_ids = data.get('labeled_ids', [])
+        lf_exemplar_ids = data.get('lf_exemplar_ids', [])
+
+        # map to real data idx in self
+        labeled_ids = [self.ids.index(i) for i in labeled_ids]
+        lf_exemplar_ids = [self.ids.index(i) for i in lf_exemplar_ids]
+
+        return labeled_ids, lf_exemplar_ids
+
+    def load_features(self, cache_name: Optional[str] = None):
+        """Method for loading data feature given the split and cache_name.
+
+        Parameters
+        ----------
+        cache_name
+            A str used to locate the feature file.
+        Returns
+        -------
+        features
+            np.ndarray
+        """
+        if cache_name is None:
+            self.features = None
+            return None
+
+        path = self.path / f'{self.split}_{cache_name}.pkl'
+        logger.info(f'loading features from {path}')
+        features = pickle.load(open(path, 'rb'))
+        self.features = features
+        return features
+
+    def save_features(self, cache_name: Optional[str] = None):
+        if cache_name is None:
+            return None
+        path = self.path / f'{self.split}_{cache_name}.pkl'
+        logger.info(f'saving features into {path}')
+        pickle.dump(self.features, open(path, 'wb'), protocol=4)
+        return path
 
     def extract_feature(self,
                         extract_fn: Union[str, Callable],
@@ -162,11 +178,19 @@ class BaseDataset(ABC):
 
         return dataset
 
-    def sample(self, alpha: Union[int, float]):
+    def create_split(self, idx: List[int]):
+        chosen = self.create_subset(idx)
+        remain = self.create_subset([i for i in range(len(self)) if i not in idx])
+        return chosen, remain
+
+    def sample(self, alpha: Union[int, float], return_dataset=True):
         if isinstance(alpha, float):
             alpha = int(len(self) * alpha)
         idx = np.random.choice(len(self), alpha, replace=False)
-        return self.create_subset(idx)
+        if return_dataset:
+            return self.create_subset(idx)
+        else:
+            return list(idx)
 
     def get_covered_subset(self):
         idx = [i for i in range(len(self)) if np.any(np.array(self.weak_labels[i]) != -1)]

@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from functools import partial
 from itertools import chain
-from numbers import Number
 from typing import List, Optional, Union, Callable
 
 import numpy as np

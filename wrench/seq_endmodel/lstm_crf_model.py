@@ -231,7 +231,7 @@ class LSTMTaggerModel(BaseTorchSeqModel):
         valid_flag = self._init_valid_step(dataset_valid, y_valid, metric, strict, direction, patience, tolerance)
 
         history = {}
-        last_step_log = {'loss': -1}
+        last_step_log = {}
         try:
             with trange(n_steps, desc="[TRAIN] LSTM Tagger", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
                 model.train()
@@ -258,7 +258,7 @@ class LSTMTaggerModel(BaseTorchSeqModel):
                             'loss'              : loss.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            f'best_step'        : self.best_step,
+                            'best_step'        : self.best_step,
                         }
                         last_step_log.update(history[step])
 

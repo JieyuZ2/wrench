@@ -6,6 +6,7 @@ import sys
 import threading
 import warnings
 from functools import partial
+from copy import deepcopy
 from typing import Any, Dict, Optional, Union, Callable
 
 import optuna
@@ -86,8 +87,7 @@ def fetch_hyperparas_suggestions(search_space: Dict, trial: Trial):
 def single_process(item, model, dataset_train, y_train, dataset_valid, y_valid, metric, direction, kwargs):
     suggestions, i = item
     kwargs = kwargs.copy()
-    hyperparas = model.hyperparas
-    m = model.__class__(**hyperparas)
+    m = deepcopy(model)
     m.fit(dataset_train=dataset_train, y_train=y_train, dataset_valid=dataset_valid, y_valid=y_valid,
           verbose=False, metric=metric, direction=direction, **suggestions, **kwargs)
     value = m.test(dataset_valid, metric_fn=metric)
@@ -99,8 +99,7 @@ def single_process_with_y_train(item, model, dataset_train, y_train, dataset_val
     kwargs = kwargs.copy()
     y_train_l = kwargs.pop('y_train_l')
     y_train = y_train_l[i]
-    hyperparas = model.hyperparas
-    m = model.__class__(**hyperparas)
+    m = deepcopy(model)
     m.fit(dataset_train=dataset_train, y_train=y_train, dataset_valid=dataset_valid, y_valid=y_valid,
           verbose=False, metric=metric, direction=direction, **suggestions, **kwargs)
     value = m.test(dataset_valid, metric_fn=metric)
@@ -112,8 +111,7 @@ def single_process_with_seed(item, model, dataset_train, y_train, dataset_valid,
     kwargs = kwargs.copy()
     seeds = kwargs.pop('seeds')
     seed = seeds[i]
-    hyperparas = model.hyperparas
-    m = model.__class__(**hyperparas)
+    m = deepcopy(model)
     m.fit(dataset_train=dataset_train, y_train=y_train, dataset_valid=dataset_valid, y_valid=y_valid,
           verbose=False, metric=metric, direction=direction, seed=seed, **suggestions, **kwargs)
     value = m.test(dataset_valid, metric_fn=metric)

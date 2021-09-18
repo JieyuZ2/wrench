@@ -1,19 +1,18 @@
 import logging
-from typing import Type, Any, Dict, Optional, Union, Callable
+from typing import Any, Optional, Union, Callable
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
 from tqdm.auto import trange
-from transformers import AdamW, get_linear_schedule_with_warmup
+from transformers import AutoTokenizer
 
-from ..backbone import BackBone, MLP
-from ..basemodel import BaseTorchClassModel
-from ..dataset import BaseDataset, TorchDataset, sample_batch
+from ..backbone import BackBone
+from ..basemodel import BaseTorchClassModel, BaseLabelModel
+from ..config import Config
+from ..dataset import sample_batch, BaseDataset
 from ..dataset.utils import split_labeled_unlabeled
-from ..labelmodel import BaseLabelModel, MajorityVoting
 from ..utils import cross_entropy_with_probs
 
 logger = logging.getLogger(__name__)
@@ -66,108 +65,111 @@ def calc_loss(inputs, target, reg=0.01):
 
 class Cosine(BaseTorchClassModel):
     def __init__(self,
-                 lr: Optional[float] = 1e-5,
-                 l2: Optional[float] = 1e-4,
                  teacher_update: Optional[int] = 100,
                  margin: Optional[float] = 1.0,
                  thresh: Optional[float] = 0.7,
                  mu: Optional[float] = 1.0,
                  lamda: Optional[float] = 0.1,
-                 batch_size: Optional[int] = 32,
+
+                 batch_size: Optional[int] = 16,
                  real_batch_size: Optional[int] = 16,
-                 test_batch_size: Optional[int] = 128,
+                 test_batch_size: Optional[int] = 16,
                  n_steps: Optional[int] = 10000,
+                 grad_norm: Optional[float] = -1,
+                 use_lr_scheduler: Optional[bool] = False,
                  binary_mode: Optional[bool] = False,
+                 **kwargs: Any
                  ):
         super().__init__()
         self.hyperparas = {
-            'lr'             : lr,
-            'l2'             : l2,
-            'teacher_update' : teacher_update,
-            'margin'         : margin,
-            'mu'             : mu,
-            'thresh'         : thresh,
-            'lamda'          : lamda,
-            'batch_size'     : batch_size,
-            'test_batch_size': test_batch_size,
-            'real_batch_size': real_batch_size,
-            'n_steps'        : n_steps,
-            'binary_mode'    : binary_mode,
+            'teacher_update'  : teacher_update,
+            'margin'          : margin,
+            'mu'              : mu,
+            'thresh'          : thresh,
+            'lamda'           : lamda,
+
+            'batch_size'      : batch_size,
+            'real_batch_size' : real_batch_size,
+            'test_batch_size' : test_batch_size,
+            'n_steps'         : n_steps,
+            'grad_norm'       : grad_norm,
+            'use_lr_scheduler': use_lr_scheduler,
+            'binary_mode'     : binary_mode,
         }
         self.model: Optional[BackBone] = None
         self.label_model: Optional[BaseLabelModel] = None
+        self.config = Config(
+            self.hyperparas,
+            use_optimizer=True,
+            use_lr_scheduler=use_lr_scheduler,
+            use_backbone=True,
+            use_label_model=True,
+            **kwargs
+        )
+        self.is_bert = self.config.backbone_config['name'] == 'BERT'
+        if self.is_bert:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.config.backbone_config['paras']['model_name'])
 
     def fit(self,
             dataset_train: BaseDataset,
-            y_train: Optional[np.ndarray] = None,
             dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
             pretrained_model: str = None,
-            label_model_class: Type[BaseLabelModel] = MajorityVoting,
-            label_model_config: Dict = None,
-            backbone_class: Type[BackBone] = MLP,
-            backbone_config: Dict = None,
             cut_tied: Optional[bool] = True,
             soft_labels: Optional[bool] = False,
-            evaluation_step: Optional[int] = 100,
+            evaluation_step: Optional[int] = 10,
             metric: Optional[Union[str, Callable]] = 'acc',
             direction: Optional[str] = 'auto',
-            patience: Optional[int] = 20,
+            patience: Optional[int] = 10,
             tolerance: Optional[float] = -1.0,
             device: Optional[torch.device] = None,
             verbose: Optional[bool] = True,
             **kwargs: Any):
 
-        label_model_config = label_model_config or {}
-        for k, v in kwargs.items():
-            if k.startswith('label_model_config_'):
-                k = k.replace('label_model_config_', '')
-                label_model_config[k] = v
-        backbone_config = backbone_config or {}
-        for k, v in kwargs.items():
-            if k.startswith('backbone_config_'):
-                k = k.replace('backbone_config_', '')
-                backbone_config[k] = v
-
         if not verbose:
             logger.setLevel(logging.ERROR)
 
-        self._update_hyperparas(**kwargs)
-        hyperparas = self.hyperparas
+        config = self.config.update(**kwargs)
+        hyperparas = self.config.hyperparas
+        logger.info(config)
+
+        n_steps = hyperparas['n_steps']
+        if hyperparas['real_batch_size'] == -1 or hyperparas['batch_size'] < hyperparas['real_batch_size'] or not self.is_bert:
+            hyperparas['real_batch_size'] = hyperparas['batch_size']
+        accum_steps = hyperparas['batch_size'] // hyperparas['real_batch_size']
+
         teacher_update = hyperparas['teacher_update']
         margin = hyperparas['margin']
         thresh = hyperparas['thresh']
         mu = hyperparas['mu']
         lamda = hyperparas['lamda']
-        n_steps = hyperparas['n_steps']
-        accum_steps = hyperparas['batch_size'] // hyperparas['real_batch_size']
+
+        model = self._init_model(
+            dataset=dataset_train,
+            n_class=dataset_train.n_class,
+            config=config,
+            is_bert=self.is_bert
+        )
+        self.model = model.to(device)
 
         valid_flag = self._init_valid_step(dataset_valid, y_valid, metric, direction, patience, tolerance)
         history = {}
-
-        n_class = dataset_train.n_class
-        backbone_config['n_class'] = n_class
-        backbone_config['binary_mode'] = hyperparas['binary_mode']
-        if dataset_train.features is not None:
-            backbone_config['input_size'] = dataset_train.features.shape[1]
-        model = backbone_class(**backbone_config).to(device)
-        self.model = model
 
         if pretrained_model is not None:
             logger.info(f'loading pretrained model, so skip pretraining stage!')
             self.model.load_state_dict(pretrained_model)
         else:
-            optimizer = AdamW(model.parameters(), lr=hyperparas['lr'], weight_decay=hyperparas['l2'])
-
-            # Set up the learning rate scheduler
-            scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=n_steps)
+            optimizer, scheduler = self._init_optimizer_and_lr_scheduler(model, config)
 
             labeled_dataset, _ = split_labeled_unlabeled(dataset_train, cut_tied=cut_tied)
-            labeled_dataloader = DataLoader(TorchDataset(labeled_dataset, n_data=n_steps * hyperparas['batch_size']),
-                                            batch_size=hyperparas['real_batch_size'], shuffle=True)
+            labeled_dataloader = self._init_train_dataloader(
+                labeled_dataset,
+                n_steps=n_steps,
+                config=config
+            )
 
-            label_model = label_model_class(**label_model_config)
-            label_model.fit(dataset_train=dataset_train, dataset_valid=dataset_valid, verbose=verbose)
+            label_model = self._init_label_model(config)
+            label_model.fit(dataset_train=dataset_train, dataset_valid=dataset_valid, verbose=False)
             self.label_model = label_model
             if soft_labels:
                 all_y_l = torch.FloatTensor(label_model.predict_proba(labeled_dataset)).to(device)
@@ -191,10 +193,11 @@ class Cosine(BaseTorchClassModel):
                     cnt += 1
 
                     if cnt % accum_steps == 0:
-                        # Clip the norm of the gradients to 1.0.
-                        nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                        if hyperparas['grad_norm'] > 0:
+                            nn.utils.clip_grad_norm_(model.parameters(), hyperparas['grad_norm'])
                         optimizer.step()
-                        scheduler.step()
+                        if scheduler is not None:
+                            scheduler.step()
                         optimizer.zero_grad()
                         step += 1
 
@@ -208,7 +211,7 @@ class Cosine(BaseTorchClassModel):
                                 'loss'              : loss.item(),
                                 f'val_{metric}'     : metric_value,
                                 f'best_val_{metric}': self.best_metric_value,
-                                f'best_step'        : self.best_step,
+                                'best_step'        : self.best_step,
                             }
                             last_step_log.update(history[step])
 
@@ -224,10 +227,7 @@ class Cosine(BaseTorchClassModel):
 
             history['pretrain'] = history_pretrain
 
-        optimizer = AdamW(model.parameters(), lr=hyperparas['lr'], weight_decay=hyperparas['l2'])
-
-        # Set up the learning rate scheduler
-        scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=n_steps)
+        optimizer, scheduler = self._init_optimizer_and_lr_scheduler(model, config)
 
         if valid_flag:
             self._reset_valid()
@@ -243,11 +243,22 @@ class Cosine(BaseTorchClassModel):
 
                 if step % teacher_update == 0:
                     n = hyperparas['batch_size'] * teacher_update
-                    sub_dataset, y_pseudo_l = self._get_new_dataset(dataset_train, n, hyperparas['test_batch_size'], thresh)
+                    sub_dataset, y_pseudo_l = self._get_new_dataset(
+                        dataset_train,
+                        n,
+                        thresh
+                    )
                     if sub_dataset is None:
                         logger.info(f'early stop because all the data are filtered!')
                         break
-                    train_dataloader = sample_batch(DataLoader(TorchDataset(sub_dataset), batch_size=hyperparas['real_batch_size'], shuffle=True))
+
+                    train_dataloader = self._init_train_dataloader(
+                        sub_dataset,
+                        n_steps=0,
+                        config=config,
+                    )
+
+                    train_dataloader = sample_batch(train_dataloader)
 
                 batch = next(train_dataloader)
                 logits, f = model(batch, return_features=True)
@@ -276,10 +287,11 @@ class Cosine(BaseTorchClassModel):
                 cnt += 1
 
                 if cnt % accum_steps == 0:
-                    # Clip the norm of the gradients to 1.0.
-                    nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                    if hyperparas['grad_norm'] > 0:
+                        nn.utils.clip_grad_norm_(model.parameters(), hyperparas['grad_norm'])
                     optimizer.step()
-                    scheduler.step()
+                    if scheduler is not None:
+                        scheduler.step()
                     optimizer.zero_grad()
                     step += 1
 
@@ -295,7 +307,7 @@ class Cosine(BaseTorchClassModel):
                             'loss_distill'      : loss_distill.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            f'best_step'        : self.best_step,
+                            'best_step'        : self.best_step,
                         }
                         last_step_log.update(history_selftrain[step])
 
@@ -313,9 +325,9 @@ class Cosine(BaseTorchClassModel):
         history['selftrain'] = history_selftrain
         return history
 
-    def _get_new_dataset(self, dataset, n, batch_size, thresh):
+    def _get_new_dataset(self, dataset, n, thresh):
         self.model.eval()
-        dataloader = DataLoader(TorchDataset(dataset), batch_size=batch_size, shuffle=True)
+        dataloader = self._init_valid_dataloader(dataset)
         model = self.model
         idx, y_pseudo = [], []
         constant = np.log(len(dataset.id2label))

@@ -24,7 +24,7 @@ class MLPModel(BaseTorchClassModel):
                  dropout: Optional[float] = 0.0,
                  batch_size: Optional[int] = 32,
                  test_batch_size: Optional[int] = 512,
-                 n_steps: Optional[int] = 100,
+                 n_steps: Optional[int] = 10000,
                  binary_mode: Optional[bool] = False
                  ):
         super().__init__()
@@ -41,9 +41,9 @@ class MLPModel(BaseTorchClassModel):
         self.model: Optional[BackBone] = None
 
     def fit(self,
-            dataset_train: Union[BaseDataset, np.ndarray],
+            dataset_train: BaseDataset,
             y_train: Optional[np.ndarray] = None,
-            dataset_valid: Optional[Union[BaseDataset, np.ndarray]] = None,
+            dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
             sample_weight: Optional[np.ndarray] = None,
             evaluation_step: Optional[int] = 100,
@@ -92,7 +92,7 @@ class MLPModel(BaseTorchClassModel):
         valid_flag = self._init_valid_step(dataset_valid, y_valid, metric, direction, patience, tolerance)
 
         history = {}
-        last_step_log = {'loss': -1}
+        last_step_log = {}
         try:
             with trange(n_steps, desc="[TRAIN] MLP Classifier", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
                 model.train()
@@ -119,7 +119,7 @@ class MLPModel(BaseTorchClassModel):
                             'loss'              : loss.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            f'best_step'        : self.best_step,
+                            'best_step'        : self.best_step,
                         }
                         last_step_log.update(history[step])
 

@@ -44,8 +44,15 @@ class BaseSyntheticGenerator(ABC):
 class SyntheticDataset(BaseDataset):
     """Data class for synthetic dataset."""
 
-    def __init__(self, split: str, ids: List, labels: List, examples: List, weak_labels: List[List], id2label: Dict,
-                 features: Optional[np.ndarray] = None, **kwargs: Any) -> None:
+    def __init__(self,
+                 split: str,
+                 ids: List,
+                 labels: List,
+                 examples: List,
+                 weak_labels: List[List],
+                 id2label: Dict,
+                 features: Optional[np.ndarray] = None,
+                 **kwargs: Any) -> None:
         self.ids = ids
         self.labels = labels
         self.examples = examples
@@ -55,6 +62,9 @@ class SyntheticDataset(BaseDataset):
         self.path = None
         self.split = split
         self.id2label = id2label
+
+        self.n_class = len(self.id2label)
+        self.n_lf = len(self.weak_labels[0])
 
     def sample(self, alpha: Union[int, float]):
         if isinstance(alpha, float):

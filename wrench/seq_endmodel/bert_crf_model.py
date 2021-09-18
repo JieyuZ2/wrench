@@ -209,7 +209,7 @@ class BERTTaggerModel(BaseTorchSeqModel):
 
         self._update_hyperparas(**kwargs)
         hyperparas = self.hyperparas
-        if hyperparas['batch_size'] < hyperparas['real_batch_size']:
+        if hyperparas['real_batch_size'] == -1 or hyperparas['batch_size'] < hyperparas['real_batch_size']:
             hyperparas['real_batch_size'] = hyperparas['batch_size']
         accum_steps = hyperparas['batch_size'] // hyperparas['real_batch_size']
 
@@ -275,7 +275,7 @@ class BERTTaggerModel(BaseTorchSeqModel):
                                 'loss'              : loss.item(),
                                 f'val_{metric}'     : metric_value,
                                 f'best_val_{metric}': self.best_metric_value,
-                                f'best_step'        : self.best_step,
+                                'best_step'        : self.best_step,
                             }
                             last_step_log.update(history[step])
 

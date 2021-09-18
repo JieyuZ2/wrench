@@ -5,8 +5,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from .backbone import BertRelationClassifier, BertTextClassifier, BertEntityClassifier
-from .dataset import BERTTorchTextClassDataset, BERTTorchRelationClassDataset, BaseDataset, TextDataset, RelationDataset, EntityDataset
+from .backbone import BertRelationClassifier, BertTextClassifier
+from .dataset import BERTTorchTextClassDataset, BERTTorchRelationClassDataset, BaseDataset, TextDataset, RelationDataset
 
 
 def set_seed(seed):
@@ -21,8 +21,6 @@ def get_bert_model_class(dataset: BaseDataset):
         return BertTextClassifier
     if isinstance(dataset, RelationDataset):
         return BertRelationClassifier
-    if isinstance(dataset, EntityDataset):
-        return BertEntityClassifier
     raise NotImplementedError
 
 
@@ -31,8 +29,6 @@ def get_bert_torch_dataset_class(dataset: BaseDataset):
         return BERTTorchTextClassDataset
     if isinstance(dataset, RelationDataset):
         return BERTTorchRelationClassDataset
-    if isinstance(dataset, EntityDataset):
-        raise NotImplementedError
     raise NotImplementedError
 
 

@@ -80,8 +80,8 @@ def label_to_span(labels: List[str],
 
 class HMM(BaseSeqModel):
     def __init__(self,
-                 n_epochs: Optional[int] = 5,
-                 redundancy_factor: Optional[float] = 0.1,
+                 n_epochs: Optional[int] = 50,
+                 redundancy_factor: Optional[float] = 0.0,
                  **kwargs: Any):
         super().__init__()
         self.hyperparas = {

@@ -5,8 +5,9 @@ import numpy as np
 import torch
 from metal.label_model import LabelModel as LabelModel_
 
-from .baselabelmodel import BaseLabelModel, check_weak_labels
+from ..basemodel import BaseLabelModel
 from ..dataset import BaseDataset
+from ..dataset.utils import check_weak_labels
 
 logger = logging.getLogger(__name__)
 

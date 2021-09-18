@@ -47,11 +47,6 @@ class BertClassifierModel(BaseTorchClassModel):
         self.model: Optional[BackBone] = None
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    def _init_valid_dataloader(self, dataset_valid: BaseDataset) -> DataLoader:
-        torch_dataset = get_bert_torch_dataset_class(dataset_valid)(dataset_valid, self.tokenizer, 512)
-        valid_dataloader = DataLoader(torch_dataset, batch_size=self.hyperparas['test_batch_size'], shuffle=False, collate_fn=collate_fn)
-        return valid_dataloader
-
     def fit(self,
             dataset_train: BaseDataset,
             y_train: Optional[np.ndarray] = None,
@@ -74,14 +69,14 @@ class BertClassifierModel(BaseTorchClassModel):
         hyperparas = self.hyperparas
 
         n_steps = hyperparas['n_steps']
-        if hyperparas['batch_size'] < hyperparas['real_batch_size']:
+        if hyperparas['real_batch_size'] == -1 or hyperparas['batch_size'] < hyperparas['real_batch_size']:
             hyperparas['real_batch_size'] = hyperparas['batch_size']
         accum_steps = hyperparas['batch_size'] // hyperparas['real_batch_size']
         torch_dataset = get_bert_torch_dataset_class(dataset_train)(dataset_train, self.tokenizer, self.hyperparas['max_tokens'],
                                                                     n_data=n_steps * hyperparas['batch_size'])
         train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'], shuffle=True, collate_fn=collate_fn)
 
-        if y_train is not None:
+        if y_train is None:
             y_train = dataset_train.labels
         y_train = torch.Tensor(y_train).to(device)
 
@@ -116,8 +111,7 @@ class BertClassifierModel(BaseTorchClassModel):
                     batch_idx = batch['ids'].to(device)
                     target = y_train[batch_idx]
                     loss = cross_entropy_with_probs(outputs, target, reduction='none')
-                    batch_sample_weights = sample_weight[batch_idx]
-                    loss = torch.mean(loss * batch_sample_weights)
+                    loss = torch.mean(loss * sample_weight[batch_idx])
                     loss.backward()
                     cnt += 1
 
@@ -139,7 +133,7 @@ class BertClassifierModel(BaseTorchClassModel):
                                 'loss'              : loss.item(),
                                 f'val_{metric}'     : metric_value,
                                 f'best_val_{metric}': self.best_metric_value,
-                                f'best_step'        : self.best_step,
+                                'best_step'        : self.best_step,
                             }
                             last_step_log.update(history[step])
 

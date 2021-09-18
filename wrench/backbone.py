@@ -4,12 +4,12 @@ from typing import Dict, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from transformers import AutoTokenizer, AutoModel, AutoConfig
+from transformers import AutoModel, AutoConfig
 
 from .layers import WordSequence
 
 
-class BackBone(nn.Module, ABC):
+class BackBone(nn.Module):
     def __init__(self, n_class, binary_mode=False):
         if binary_mode:
             assert n_class == 2
@@ -20,6 +20,26 @@ class BackBone(nn.Module, ABC):
 
     def get_device(self):
         return self.dummy_param.device
+
+    @abstractmethod
+    def forward(self, batch: Dict, return_features: Optional[bool] = False):
+        pass
+
+
+class BERTBackBone(BackBone):
+    def __init__(self, n_class, model_name='bert-base-cased', fine_tune_layers=-1, binary_mode=False):
+        super(BERTBackBone, self).__init__(n_class=n_class, binary_mode=binary_mode)
+        self.model_name = model_name
+        self.config = AutoConfig.from_pretrained(model_name, num_labels=self.n_class, output_hidden_states=True)
+        self.model = AutoModel.from_pretrained(model_name, config=self.config)
+
+        if fine_tune_layers >= 0:
+            for param in self.model.base_model.embeddings.parameters(): param.requires_grad = False
+            if fine_tune_layers > 0:
+                n_layers = len(self.model.base_model.encoder.layer)
+                for layer in self.model.base_model.encoder.layer[:n_layers - fine_tune_layers]:
+                    for param in layer.parameters():
+                        param.requires_grad = False
 
     @abstractmethod
     def forward(self, batch: Dict, return_features: Optional[bool] = False):
@@ -61,29 +81,16 @@ class MLP(BackBone):
 
 
 #######################################################################################################################
-class BertTextClassifier(BackBone):
+class BertTextClassifier(BERTBackBone):
     """
     Bert with a MLP on top for text classification
     """
 
     def __init__(self, n_class, model_name='bert-base-cased', fine_tune_layers=-1, max_length=512, binary_mode=False, **kwargs):
-        super(BertTextClassifier, self).__init__(n_class=n_class, binary_mode=binary_mode)
-        config = AutoConfig.from_pretrained(model_name, num_labels=self.n_class, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(model_name, config=config)
-        self.config = config
+        super(BertTextClassifier, self).__init__(n_class=n_class, model_name=model_name, fine_tune_layers=fine_tune_layers, binary_mode=binary_mode)
 
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
-
-        if fine_tune_layers >= 0:
-            for param in self.model.base_model.embeddings.parameters(): param.requires_grad = False
-            if fine_tune_layers > 0:
-                n_layers = len(self.model.base_model.encoder.layer)
-                for layer in self.model.base_model.encoder.layer[:n_layers - fine_tune_layers]:
-                    for param in layer.parameters():
-                        param.requires_grad = False
-
-        self.model_name = model_name
+        self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
+        self.classifier = nn.Linear(self.config.hidden_size, self.config.num_labels)
         self.max_length = max_length
 
     def forward(self, batch, return_features=False):  # inputs: [batch, t]
@@ -118,31 +125,17 @@ class FClayer(nn.Module):
             return x
 
 
-class BertRelationClassifier(BackBone):
+class BertRelationClassifier(BERTBackBone):
     """
     BERT with a MLP on top for relation classification
     """
 
     def __init__(self, n_class, model_name='bert-base-cased', fine_tune_layers=-1, binary_mode=False, **kwargs):
-        super(BertRelationClassifier, self).__init__(n_class=n_class, binary_mode=binary_mode)
-        config = AutoConfig.from_pretrained(model_name, output_hidden_states=True)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name, config=config)
-        self.config = config
-
-        if fine_tune_layers >= 0:
-            for param in self.model.base_model.embeddings.parameters(): param.requires_grad = False
-            if fine_tune_layers > 0:
-                n_layers = len(self.model.base_model.encoder.layer)
-                for layer in self.model.base_model.encoder.layer[:n_layers - fine_tune_layers]:
-                    for param in layer.parameters():
-                        param.requires_grad = False
-
-        self.fc_cls = FClayer(config.hidden_size, config.hidden_size, dropout=config.hidden_dropout_prob)
-        self.fc_e1 = FClayer(config.hidden_size, config.hidden_size, dropout=config.hidden_dropout_prob)
-        self.fc_e2 = FClayer(config.hidden_size, config.hidden_size, dropout=config.hidden_dropout_prob)
-        self.output = FClayer(config.hidden_size * 3, self.n_class, dropout=config.hidden_dropout_prob, activation=False)
-        self.model_name = model_name
+        super(BertRelationClassifier, self).__init__(n_class=n_class, model_name=model_name, fine_tune_layers=fine_tune_layers, binary_mode=binary_mode)
+        self.fc_cls = FClayer(self.config.hidden_size, self.config.hidden_size, dropout=self.config.hidden_dropout_prob)
+        self.fc_e1 = FClayer(self.config.hidden_size, self.config.hidden_size, dropout=self.config.hidden_dropout_prob)
+        self.fc_e2 = FClayer(self.config.hidden_size, self.config.hidden_size, dropout=self.config.hidden_dropout_prob)
+        self.output = FClayer(self.config.hidden_size * 3, self.n_class, dropout=self.config.hidden_dropout_prob, activation=False)
 
     @staticmethod
     def entity_average(hidden_output, e_mask):
@@ -176,91 +169,10 @@ class BertRelationClassifier(BackBone):
             return output
 
 
-""" BERT for entity classification """
-
-
-#######################################################################################################################
-class BertEntityClassifier(BackBone):
-    """
-    BERT with a MLP on top for relation classification
-    """
-
-    def __init__(self, n_class, model_name='bert-base-cased', fine_tune_layers=-1, binary_mode=False, **kwargs):
-        super(BertEntityClassifier, self).__init__(n_class=n_class, binary_mode=binary_mode)
-        config = AutoConfig.from_pretrained(model_name, output_hidden_states=True)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name, config=config)
-        self.config = config
-        self.n_class = n_class
-
-        if fine_tune_layers >= 0:
-            for param in self.model.base_model.embeddings.parameters(): param.requires_grad = False
-            if fine_tune_layers > 0:
-                n_layers = len(self.model.base_model.encoder.layer)
-                for layer in self.model.base_model.encoder.layer[:n_layers - fine_tune_layers]:
-                    for param in layer.parameters():
-                        param.requires_grad = False
-
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, n_class)
-        self.model_name = model_name
-
-    @staticmethod
-    def entity_average(hidden_output, e_mask):
-        """
-        Average the entity hidden state vectors (H_i ~ H_j)
-        :param hidden_output: [batch_size, j-i+1, dim]
-        :param e_mask: [batch_size, max_seq_len]
-                e.g. e_mask[0] == [0, 0, 0, 1, 1, 1, 0, 0, ... 0]
-        :return: [batch_size, dim]
-        """
-
-        e_mask_unsqueeze = e_mask.unsqueeze(1)  # [b, 1, j-i+1]
-        length_tensor = (e_mask != 0).sum(dim=1).unsqueeze(1)  # [batch_size, 1]
-
-        sum_vector = torch.bmm(e_mask_unsqueeze.float(), hidden_output).squeeze(1)  # [b, 1, j-i+1] * [b, j-i+1, dim] = [b, 1, dim] -> [b, dim]
-        avg_vector = sum_vector.float() / length_tensor.float()  # broadcasting
-        return avg_vector
-
-    def forward(self, batch, return_features=False):
-        input_ids, e1_mask = self.preprocess(batch['data'])
-        outputs = self.model(input_ids=input_ids)  # [t, batch, hidden]
-        bert_out = outputs.last_hidden_state
-        h = self.dropout(self.entity_average(bert_out, e1_mask))
-        output = self.classifier(h)
-        if return_features:
-            return output, h
-        else:
-            return output
-
-    def preprocess(self, batch):
-        span_s_l, span_e_l = batch.pop('span')
-        e_l, s_l, tokens_l = [], [], []
-        for i, sentence in enumerate(batch['text']):
-            left_tkns = ["[CLS]"] + self.tokenizer.tokenize(sentence[:span_s_l[i]])
-            entity_tkns = self.tokenizer.tokenize(sentence[span_s_l[i]:span_e_l[i]])
-            right_tkns = self.tokenizer.tokenize(sentence[span_e_l[i]:]) + ["[SEP]"]
-            tokens = left_tkns + entity_tkns + right_tkns
-
-            e = len(left_tkns + entity_tkns)
-            s = len(left_tkns)
-            e_l.append(e)
-            s_l.append(s)
-            tokens_l.append(self.tokenizer.convert_tokens_to_ids(tokens))
-
-        max_len = max(list(map(len, tokens_l)))
-        input_ids = torch.LongTensor([t + [self.tokenizer.pad_token_id] * (max_len - len(t)) for t in tokens_l])
-        e1_mask = torch.zeros_like(input_ids)
-        for i in range(len(tokens_l)):
-            e1_mask[i, s_l[i]:e_l[i]] = 1
-        device = self.get_device()
-        return input_ids.to(device), e1_mask.to(device)
-
-
 """ for sequence tagging """
 
 
-class CRFTagger(BackBone, ABC):
+class CRFTagger(BackBone):
     def __init__(self, n_class, use_crf):
         super(CRFTagger, self).__init__(n_class=n_class)
         self.use_crf = use_crf

@@ -44,7 +44,7 @@ def agg_labels(weak_labels, n_class):  # use MV (since no priors) to aggregate w
 
 class LSTMConNetModel(LSTMTaggerModel):
     def __init__(self,
-                 n_steps_phase1: Optional[int] = 100,
+                 n_steps_phase1: Optional[int] = 200,
                  n_steps: Optional[int] = 10000,
                  **kwargs
                  ):
@@ -186,7 +186,7 @@ class LSTMConNetModel(LSTMTaggerModel):
                         'loss'              : loss.item(),
                         f'val_{metric}'     : metric_value,
                         f'best_val_{metric}': self.best_metric_value,
-                        f'best_step'        : self.best_step,
+                        'best_step'        : self.best_step,
                     }
                     last_step_log.update(history_phase2[step])
 
@@ -209,7 +209,7 @@ class LSTMConNetModel(LSTMTaggerModel):
 
 class BERTConNetModel(BERTTaggerModel):
     def __init__(self,
-                 n_steps_phase1: Optional[int] = 100,
+                 n_steps_phase1: Optional[int] = 200,
                  n_steps: Optional[int] = 10000,
                  **kwargs
                  ):
@@ -367,7 +367,7 @@ class BERTConNetModel(BERTTaggerModel):
                             'loss'              : loss.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            f'best_step'        : self.best_step,
+                            'best_step'        : self.best_step,
                         }
                         last_step_log.update(history_phase2[step])
 
