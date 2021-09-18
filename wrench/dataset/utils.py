@@ -12,17 +12,13 @@ from transformers import AutoTokenizer, AutoModel
 from .basedataset import BaseDataset
 
 
-def check_dataset(dataset: Union[BaseDataset, np.ndarray], y: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+def check_weak_labels(dataset: Union[BaseDataset, np.ndarray]) -> np.ndarray:
     if isinstance(dataset, BaseDataset):
-        assert dataset.features is not None, f'Input dataset has None features, call dataset.extract_feature() first!'
-        x = dataset.features
-        if y is None:
-            warnings.warn(f'Didn\'t input y, using dataset_train.labels.')
-            y = np.array(dataset.labels)
+        assert dataset.weak_labels is not None, f'Input dataset has no weak labels!'
+        L = np.array(dataset.weak_labels)
     else:
-        x = dataset
-        assert y is not None, f"y is required!"
-    return x, y
+        L = dataset
+    return L
 
 
 def split_labeled_unlabeled(dataset: BaseDataset, cut_tied: Optional[bool] = False) -> Tuple[BaseDataset, BaseDataset]:

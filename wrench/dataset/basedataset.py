@@ -157,6 +157,8 @@ class BaseDataset(ABC):
         dataset.id2label = copy.deepcopy(self.id2label)
         dataset.split = self.split
         dataset.path = self.path
+        dataset.n_class = self.n_class
+        dataset.n_lf = self.n_lf
 
         return dataset
 

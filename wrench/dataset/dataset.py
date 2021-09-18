@@ -5,7 +5,7 @@ import torch
 
 from .basedataset import BaseDataset
 from .utils import bag_of_words_extractor, tf_idf_extractor, sentence_transformer_extractor, \
-    bert_text_extractor, bert_relation_extractor, bert_entity_extractor
+    bert_text_extractor, bert_relation_extractor
 
 
 class NumericDataset(BaseDataset):
@@ -96,39 +96,6 @@ class RelationDataset(BaseDataset):
                                                       model_name=model_name,
                                                       feature=feature,
                                                       **kwargs)
-        else:
-            raise NotImplementedError(f'feature extraction method {extract_fn} is not supported!')
-
-        self.features = data
-
-        if return_extractor:
-            return extractor
-
-
-class EntityDataset(BaseDataset):
-    """Data class for relation dataset."""
-
-    def extract_feature_(self,
-                         extract_fn: str,
-                         return_extractor: bool,
-                         device: torch.device = None,
-                         model_name: Optional[str] = 'bert-base-cased',
-                         **kwargs: Any):
-        """Method for extracting features for TextDataset.
-
-        Parameters
-        ----------
-        extract_fn
-            str with values in {'bert'} or customized Callable function.
-        return_extractor
-            Whether to return feature extractor.
-        """
-
-        if extract_fn == 'bert':
-            data, extractor = bert_entity_extractor(self.examples,
-                                                    device=device,
-                                                    model_name=model_name,
-                                                    **kwargs)
         else:
             raise NotImplementedError(f'feature extraction method {extract_fn} is not supported!')
 

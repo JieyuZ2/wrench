@@ -1,5 +1,5 @@
 from .basedataset import BaseDataset
-from .dataset import NumericDataset, TextDataset, RelationDataset, EntityDataset
+from .dataset import NumericDataset, TextDataset, RelationDataset
 from .seqdataset import BaseSeqDataset
 from .torchdataset import TorchDataset, sample_batch, BERTTorchTextClassDataset, BERTTorchRelationClassDataset
 

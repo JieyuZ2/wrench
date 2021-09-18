@@ -6,8 +6,9 @@ import numpy as np
 from numba import njit, prange
 from tqdm.auto import trange
 
-from .baselabelmodel import BaseLabelModel, check_weak_labels
+from ..basemodel import BaseLabelModel
 from ..dataset import BaseDataset
+from ..dataset.utils import check_weak_labels
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +37,14 @@ def initialize_Y_p(Y_p, L, n_class):
 
 
 class DawidSkene(BaseLabelModel):
-    def __init__(self, n_epochs: Optional[int] = 10000, **kwargs: Any):
+    def __init__(self,
+                 n_epochs: Optional[int] = 10000,
+                 tolerance: Optional[float] = 1e-5,
+                 **kwargs: Any):
         super().__init__()
         self.hyperparas = {
             'n_epochs': n_epochs,
+            'tolerance': tolerance,
         }
 
     def fit(self,
@@ -48,7 +53,6 @@ class DawidSkene(BaseLabelModel):
             y_valid: Optional[np.ndarray] = None,
             n_class: Optional[int] = None,
             balance: Optional[np.ndarray] = None,
-            tol: Optional[float] = 1e-5,
             verbose: Optional[bool] = False,
             **kwargs: Any):
 
@@ -67,6 +71,7 @@ class DawidSkene(BaseLabelModel):
         L_aug = self._initialize_L_aug(L)
 
         max_iter = self.hyperparas['n_epochs']
+        tol = self.hyperparas['tolerance']
         old_class_marginals = None
         old_error_rates = None
         for iter in trange(max_iter):
