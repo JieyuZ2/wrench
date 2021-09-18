@@ -6,7 +6,10 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/JieyuZ2/wrench/commits/main)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![repo size](https://img.shields.io/github/repo-size/JieyuZ2/wrench.svg)](https://github.com/JieyuZ2/wrench/archive/master.zip)
-![visitors](https://visitor-badge.glitch.me/badge?page_id=JieyuZ2/wrench) ![GitHub stars](https://img.shields.io/github/stars/JieyuZ2/wrench.svg?color=green)  ![GitHub forks](https://img.shields.io/github/forks/JieyuZ2/wrench?color=9cf)
+[![Total lines](https://img.shields.io/tokei/lines/github/JieyuZ2/wrench?color=red)](https://github.com/JieyuZ2/wrench)
+![visitors](https://visitor-badge.glitch.me/badge?page_id=JieyuZ2/wrench)
+![GitHub stars](https://img.shields.io/github/stars/JieyuZ2/wrench.svg?color=green)
+![GitHub forks](https://img.shields.io/github/forks/JieyuZ2/wrench?color=9cf)
 
 
 ## 🔧 What is it?
