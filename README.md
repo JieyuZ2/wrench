@@ -10,13 +10,28 @@
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=JieyuZ2/wrench)
 ![GitHub stars](https://img.shields.io/github/stars/JieyuZ2/wrench.svg?color=green)
 ![GitHub forks](https://img.shields.io/github/forks/JieyuZ2/wrench?color=9cf)
+[![Arxiv](https://img.shields.io/badge/ArXiv-2109.11377-orange.svg)](https://arxiv.org/abs/2109.11377) 
 
 
 ## 🔧 What is it?
 
 **Wrench** is a **benchmark platform** containing diverse weak supervision tasks. It also provides a **common and easy framework** for development and evaluation of your own weak supervision models within the benchmark.
 
-For more information, checkout our publications: (coming soon!)
+For more information, checkout our publications: 
+- [WRENCH: A Comprehensive Benchmark for Weak Supervision](https://arxiv.org/abs/2109.11377) (arXiv 2021)
+
+If you find this repository helpful, feel free to cite our publication:
+
+```
+@misc{zhang2021wrench,
+      title={WRENCH: A Comprehensive Benchmark for Weak Supervision}, 
+      author={Jieyu Zhang and Yue Yu and Yinghao Li and Yujing Wang and Yaming Yang and Mao Yang and Alexander Ratner},
+      year={2021},
+      eprint={2109.11377},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
 
 ## 🔧 What is weak supervision?
 
@@ -55,6 +70,8 @@ gdown https://drive.google.com/uc?id=19wMFmpoo_0ORhBzB6n16B1nRRX508AnJ
 unzip datasets.zip
 rm datasets.zip 
 ```
+
+A documentation of dataset format and usage can be found in this [wiki-page](https://github.com/JieyuZ2/wrench/wiki/Dataset:-Format-and-Usage)
 
 ### classification:
 | Name | Task | # class | # LF | # train | # validation | # test | data source | LF source |
