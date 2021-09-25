@@ -142,9 +142,9 @@ dependencies:
   - thinc=8.0.8=py36h706143c_0
   - threadpoolctl=2.2.0=pyhbf3da8f_0
   - tk=8.6.10=hbc83047_0
-  - tokenizers=0.10.3=py36_0
+  - tokenizers=0.10.1=py36_0
   - tqdm=4.62.1=pyhd3eb1b0_1
-  - transformers=4.10.0=py_0
+  - transformers=4.6.1=py_0
   - typer=0.3.2=pyhd3eb1b0_0
   - typing-extensions=3.10.0.0=hd3eb1b0_0
   - typing_extensions=3.10.0.0=pyh06a4308_0
@@ -162,9 +162,12 @@ dependencies:
     - dill==0.3.4
     - flyingsquid==0.0.0a0
     - future==0.18.2
+    - higher==0.2.1
     - hmmlearn==0.2.6
     - munkres==1.1.4
     - numbskull==0.1.1
+    - patsy==0.5.1
+    - pgmpy==0.1.14
     - pillow==8.3.2
     - pytokenizations==0.7.2
     - sentence-transformers==1.1.1
@@ -172,6 +175,8 @@ dependencies:
     - skweak==0.2.13
     - snorkel==0.9.7
     - snorkel-metal==0.5.0
+    - statsmodels==0.12.2
     - tensorboard==1.15.0
+    - tensorboardx==1.4
     - toolz==0.11.1
     - torchvision==0.10.0
