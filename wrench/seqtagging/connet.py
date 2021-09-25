@@ -186,7 +186,7 @@ class LSTMConNetModel(LSTMTaggerModel):
                         'loss'              : loss.item(),
                         f'val_{metric}'     : metric_value,
                         f'best_val_{metric}': self.best_metric_value,
-                        'best_step'        : self.best_step,
+                        'best_step'         : self.best_step,
                     }
                     last_step_log.update(history_phase2[step])
 
@@ -367,7 +367,7 @@ class BERTConNetModel(BERTTaggerModel):
                             'loss'              : loss.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            'best_step'        : self.best_step,
+                            'best_step'         : self.best_step,
                         }
                         last_step_log.update(history_phase2[step])
 
@@ -465,7 +465,7 @@ class LSTMConNet(BaseConNet):
                  word_emb_dim,
                  word_hidden_dim,
                  word_feature_extractor,
-                 n_lstm_layer,
+                 n_word_hidden_layer,
                  use_char,
                  char_embedding,
                  char_emb_dim,
@@ -483,7 +483,7 @@ class LSTMConNet(BaseConNet):
             word_emb_dim=word_emb_dim,
             word_hidden_dim=word_hidden_dim,
             word_feature_extractor=word_feature_extractor,
-            n_lstm_layer=n_lstm_layer,
+            n_word_hidden_layer=n_word_hidden_layer,
             use_char=use_char,
             char_embedding=char_embedding,
             char_emb_dim=char_emb_dim,

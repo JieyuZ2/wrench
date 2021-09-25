@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import defaultdict
 from functools import partial
 from itertools import chain
 from typing import List, Optional, Union, Callable
@@ -9,9 +9,9 @@ from scipy.sparse import csr_matrix
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.utils import check_random_state
-from tqdm import trange
 
 from ..dataset import BaseDataset, TextDataset
+from ..utils import array_to_marginals, calc_cmi_matrix, cluster_based_accuracy_variance
 
 ABSTAIN = -1
 
@@ -336,31 +336,13 @@ class AbstractLFGenerator(ABC):
         self.n_data = len(dataset)
         self.min_support = int(min_support * self.n_data)
         self.min_acc_gain = min_acc_gain
-        self.class_marginal = self.array_to_marginals(self.Y)
+        self.class_marginal = array_to_marginals(self.Y)
 
         self.generator = check_random_state(random_state)
 
     @staticmethod
-    def array_to_marginals(y):
-        class_counts = Counter(y)
-        sorted_counts = np.array([v for k, v in sorted(class_counts.items())])
-        _marginal = sorted_counts / sum(sorted_counts)
-        return _marginal
-
-    @staticmethod
     def calc_acc(y):
         return np.sum(y) / len(y)
-
-    @staticmethod
-    def cluster_based_accuracy_variance(Y, L, cluster_labels):
-        correct = Y == L
-        acc_l = []
-        cluster_idx = np.unique(cluster_labels)
-        for cluster in cluster_idx:
-            cluster_correct = correct[cluster_labels == cluster]
-            cluster_acc = np.sum(cluster_correct) / len(cluster_correct)
-            acc_l.append(cluster_acc)
-        return np.var(acc_l)
 
     def check_candidate_lfs_enough_(self, n_lfs: Union[int, List[int]]):
         if isinstance(n_lfs, int):
@@ -427,37 +409,8 @@ class AbstractLFGenerator(ABC):
         if isinstance(n_lfs, int):
             candidate_lfs = self.return_candidate_lfs()
             L = np.stack([lf.apply(self.X) for lf in candidate_lfs]).T
-            n, m = L.shape
-            class_marginal = self.class_marginal
-            c_idx_l = [self.Y == c for c in range(self.n_class)]
-            c_cnt_l = [np.sum(c_idx) for c_idx in c_idx_l]
-            cond_probs = np.zeros((self.n_class, m, 2))
-            for c, c_idx in enumerate(c_idx_l):
-                for i in range(m):
-                    cond_probs[c, i] = self.array_to_marginals(L[:, i][c_idx])
 
-            cmi_matrix = -np.ones((m, m)) * np.inf
-            for i in trange(m):
-                L_i = L[:, i]
-                for j in range(i + 1, m):
-                    L_j = L[:, j]
-                    cmi_ij = 0.0
-                    for c, (c_idx, n_c) in enumerate(zip(c_idx_l, c_cnt_l)):
-                        cmi = 0.0
-                        p_00 = np.sum(np.logical_and(L_i[c_idx] == -1, L_j[c_idx] == -1)) / n_c
-                        if p_00 > 0:
-                            cmi += p_00 * np.log(p_00 / (cond_probs[c, i, 0] * cond_probs[c, j, 0]))
-                        p_01 = np.sum(np.logical_and(L_i[c_idx] == -1, L_j[c_idx] != -1)) / n_c
-                        if p_01 > 0:
-                            cmi += p_01 * np.log(p_01 / (cond_probs[c, i, 0] * cond_probs[c, j, 1]))
-                        p_10 = np.sum(np.logical_and(L_i[c_idx] != -1, L_j[c_idx] == -1)) / n_c
-                        if p_10 > 0:
-                            cmi += p_10 * np.log(p_10 / (cond_probs[c, i, 1] * cond_probs[c, j, 0]))
-                        p_11 = 1 - (p_00 + p_01 + p_10)
-                        if p_11 > 0:
-                            cmi += p_11 * np.log(p_11 / (cond_probs[c, i, 1] * cond_probs[c, j, 1]))
-                        cmi_ij += class_marginal[c] * cmi
-                    cmi_matrix[i, j] = cmi_matrix[j, i] = cmi_ij
+            cmi_matrix = calc_cmi_matrix(self.Y, L)
 
             row_max, col_max = np.unravel_index(cmi_matrix.argmax(), cmi_matrix.shape)
             lfs_idx = [row_max, col_max]
@@ -471,42 +424,12 @@ class AbstractLFGenerator(ABC):
         else:
             labels = list(range(self.n_class))
             lfs = []
-            # for label, n_lfs_i, n_correlated_lfs_i in zip(labels, n_lfs, n_correlated_lfs):
             for label, n_lfs_i in zip(labels, n_lfs):
                 candidate_lfs = self.label_to_candidate_lfs[label]
                 L = np.stack([lf.apply(self.X) for lf in candidate_lfs]).T
-                n, m = L.shape
                 Y = np.array(self.Y == label, dtype=int)
-                c_idx_l = [Y == 0, Y == 1]
-                c_cnt_l = [np.sum(c_idx) for c_idx in c_idx_l]
-                class_marginal = [c_cnt / n for c_cnt in c_cnt_l]
-                cond_probs = np.zeros((2, m, 2))
-                for c, c_idx in enumerate(c_idx_l):
-                    for i in range(m):
-                        cond_probs[c, i] = self.array_to_marginals(L[:, i][c_idx])
 
-                cmi_matrix = -np.ones((m, m)) * np.inf
-                for i in trange(m):
-                    L_i = L[:, i]
-                    for j in range(i + 1, m):
-                        L_j = L[:, j]
-                        cmi_ij = 0.0
-                        for c, (c_idx, n_c) in enumerate(zip(c_idx_l, c_cnt_l)):
-                            cmi = 0.0
-                            p_00 = np.sum(np.logical_and(L_i[c_idx] == -1, L_j[c_idx] == -1)) / n_c
-                            if p_00 > 0:
-                                cmi += p_00 * np.log(p_00 / (cond_probs[c, i, 0] * cond_probs[c, j, 0]))
-                            p_01 = np.sum(np.logical_and(L_i[c_idx] == -1, L_j[c_idx] != -1)) / n_c
-                            if p_01 > 0:
-                                cmi += p_01 * np.log(p_01 / (cond_probs[c, i, 0] * cond_probs[c, j, 1]))
-                            p_10 = np.sum(np.logical_and(L_i[c_idx] != -1, L_j[c_idx] == -1)) / n_c
-                            if p_10 > 0:
-                                cmi += p_10 * np.log(p_10 / (cond_probs[c, i, 1] * cond_probs[c, j, 0]))
-                            p_11 = 1 - (p_00 + p_01 + p_10)
-                            if p_11 > 0:
-                                cmi += p_11 * np.log(p_11 / (cond_probs[c, i, 1] * cond_probs[c, j, 1]))
-                            cmi_ij += class_marginal[c] * cmi
-                        cmi_matrix[i, j] = cmi_matrix[j, i] = cmi_ij
+                cmi_matrix = calc_cmi_matrix(Y, L)
 
                 row_max, col_max = np.unravel_index(cmi_matrix.argmax(), cmi_matrix.shape)
                 lfs_idx = [row_max, col_max]
@@ -526,7 +449,7 @@ class AbstractLFGenerator(ABC):
             candidate_lfs = self.return_candidate_lfs()
             L = np.stack([lf.apply(self.X) for lf in candidate_lfs]).T
             acc_var = np.array(
-                [self.cluster_based_accuracy_variance(self.Y, L[:, i], cluster_labels) for i in range(L.shape[1])])
+                [cluster_based_accuracy_variance(self.Y, L[:, i], cluster_labels) for i in range(L.shape[1])])
             argsort_idx = np.argsort(-acc_var)
             lfs = [candidate_lfs[i] for i in argsort_idx[:n_lfs]]
         else:
@@ -536,7 +459,7 @@ class AbstractLFGenerator(ABC):
                 candidate_lfs = self.label_to_candidate_lfs[label]
                 L = np.stack([lf.apply(self.X) for lf in candidate_lfs]).T
                 acc_var = np.array(
-                    [self.cluster_based_accuracy_variance(self.Y, L[:, i], cluster_labels) for i in range(L.shape[1])])
+                    [cluster_based_accuracy_variance(self.Y, L[:, i], cluster_labels) for i in range(L.shape[1])])
                 argsort_idx = np.argsort(-acc_var)
                 lfs += [candidate_lfs[i] for i in argsort_idx[:n_lfs_i]]
         return self.lf_applier_type(lfs)

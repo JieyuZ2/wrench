@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 from typing import Dict, Optional
 
 import numpy as np
@@ -30,6 +31,68 @@ def get_bert_torch_dataset_class(dataset: BaseDataset):
     if isinstance(dataset, RelationDataset):
         return BERTTorchRelationClassDataset
     raise NotImplementedError
+
+
+def array_to_marginals(y, cardinality=None):
+    class_counts = Counter(y)
+    if cardinality is None:
+        sorted_counts = np.array([v for k, v in sorted(class_counts.items())])
+    else:
+        sorted_counts = np.zeros(len(cardinality))
+        for i, c in enumerate(cardinality):
+            sorted_counts[i] = class_counts.get(c, 0)
+    marginal = sorted_counts / sum(sorted_counts)
+    return marginal
+
+
+def calc_cmi_matrix(y, L):
+    n, m = L.shape
+    lf_cardinality = [sorted(np.unique(L[:, i])) for i in range(m)]
+
+    n_class = len(np.unique(y))
+    c_idx_l = [y == c for c in range(n_class)]
+    c_cnt_l = [np.sum(c_idx) for c_idx in c_idx_l]
+    class_marginal = [c_cnt / n for c_cnt in c_cnt_l]
+
+    cond_probs = np.zeros((n_class, m, max(map(len, lf_cardinality))))
+    for c, c_idx in enumerate(c_idx_l):
+        for i in range(m):
+            card_i = lf_cardinality[i]
+            cond_probs[c, i][:len(card_i)] = array_to_marginals(L[:, i][c_idx], card_i)
+
+    cmi_matrix = -np.ones((m, m)) * np.inf
+    for i in range(m):
+        L_i = L[:, i]
+        card_i = lf_cardinality[i]
+        for j in range(i + 1, m):
+            L_j = L[:, j]
+            card_j = lf_cardinality[j]
+
+            cmi_ij = 0.0
+            for c, (c_idx, n_c) in enumerate(zip(c_idx_l, c_cnt_l)):
+                cmi = 0.0
+                for ci_idx, ci in enumerate(card_i):
+                    for cj_idx, cj in enumerate(card_j):
+                        p = np.sum(np.logical_and(L_i[c_idx] == ci, L_j[c_idx] == cj)) / n_c
+                        if p > 0:
+                            cur = p * np.log(p / (cond_probs[c, i, ci_idx] * cond_probs[c, j, cj_idx]))
+                            cmi += cur
+
+                cmi_ij += class_marginal[c] * cmi
+            cmi_matrix[i, j] = cmi_matrix[j, i] = cmi_ij
+
+    return cmi_matrix
+
+
+def cluster_based_accuracy_variance(Y, L, cluster_labels):
+    correct = Y == L
+    acc_l = []
+    cluster_idx = np.unique(cluster_labels)
+    for cluster in cluster_idx:
+        cluster_correct = correct[cluster_labels == cluster]
+        cluster_acc = np.sum(cluster_correct) / len(cluster_correct)
+        acc_l.append(cluster_acc)
+    return np.var(acc_l)
 
 
 def cross_entropy_with_probs(

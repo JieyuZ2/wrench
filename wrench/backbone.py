@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Dict, Optional
 
 import torch
@@ -230,7 +230,7 @@ class LSTMSeqTagger(CRFTagger):
                  word_emb_dim,
                  word_hidden_dim,
                  word_feature_extractor,
-                 n_lstm_layer,
+                 n_word_hidden_layer,
                  use_char,
                  char_embedding,
                  char_emb_dim,
@@ -248,7 +248,7 @@ class LSTMSeqTagger(CRFTagger):
             word_emb_dim=word_emb_dim,
             word_hidden_dim=word_hidden_dim,
             word_feature_extractor=word_feature_extractor,
-            n_lstm_layer=n_lstm_layer,
+            n_word_hidden_layer=n_word_hidden_layer,
             use_char=use_char,
             char_embedding=char_embedding,
             char_emb_dim=char_emb_dim,

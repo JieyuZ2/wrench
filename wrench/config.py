@@ -80,8 +80,7 @@ class Config:
         prefix = self.prefix
         if prefix != '':
             prefix += '_'
-            kwargs = {k.replace(prefix, ''):v for k,v in kwargs.items() if k.startswith(prefix)}
-
+            kwargs = {k.replace(prefix, ''): v for k, v in kwargs.items() if k.startswith(prefix)}
 
         if hasattr(self, 'optimizer_config'):
             if 'optimizer' in kwargs:

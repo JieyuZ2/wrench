@@ -157,7 +157,7 @@ class WordSequence(nn.Module):
                  word_emb_dim,
                  word_hidden_dim,
                  word_feature_extractor,
-                 n_lstm_layer,
+                 n_word_hidden_layer,
                  use_char,
                  char_embedding,
                  char_emb_dim,
@@ -199,9 +199,9 @@ class WordSequence(nn.Module):
         lstm_hidden = word_hidden_dim // 2  # args.HP_hidden_dim // 2
 
         if word_feature_extractor == "GRU":
-            self.lstm = nn.GRU(input_size, lstm_hidden, num_layers=n_lstm_layer, batch_first=True, bidirectional=True)
+            self.lstm = nn.GRU(input_size, lstm_hidden, num_layers=n_word_hidden_layer, batch_first=True, bidirectional=True)
         elif word_feature_extractor == "LSTM":
-            self.lstm = nn.LSTM(input_size, lstm_hidden, num_layers=n_lstm_layer, batch_first=True, bidirectional=True)
+            self.lstm = nn.LSTM(input_size, lstm_hidden, num_layers=n_word_hidden_layer, batch_first=True, bidirectional=True)
         else:
             raise ValueError(f'unknown extractor {word_feature_extractor}!')
         # The linear layer that maps from hidden state space to tag space

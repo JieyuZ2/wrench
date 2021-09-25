@@ -9,10 +9,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from snorkel.utils import probs_to_preds
-from torch import optim
+from torch import optim, nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from torch import nn
 
 from . import backbone
 from .backbone import BackBone, BERTBackBone
@@ -36,7 +35,7 @@ class BaseModel(ABC):
 
     @abstractmethod
     def fit(self, dataset_train, y_train=None, dataset_valid=None, y_valid=None,
-            verbose: Optional[bool] = False, **kwargs: Any):
+            verbose: Optional[bool] = False, *args: Any, **kwargs: Any):
         """Abstract method for fitting training data.
 
         Parameters
@@ -185,7 +184,7 @@ class BaseClassModel(BaseModel, ABC):
     @abstractmethod
     def fit(self, dataset_train: Union[BaseDataset, np.ndarray], y_train: Optional[np.ndarray] = None,
             dataset_valid: Optional[Union[BaseDataset, np.ndarray]] = None, y_valid: Optional[np.ndarray] = None,
-            verbose: Optional[bool] = False, **kwargs: Any):
+            verbose: Optional[bool] = False, *args: Any, **kwargs: Any):
         """Abstract method for fitting training data.
 
         Parameters
@@ -230,6 +229,7 @@ class BaseLabelModel(BaseClassModel):
             y_valid: Optional[np.ndarray] = None,
             n_class: Optional[int] = None,
             verbose: Optional[bool] = False,
+            *args: Any,
             **kwargs: Any):
         pass
 
@@ -268,7 +268,7 @@ class BaseSeqModel(BaseModel, ABC):
     @abstractmethod
     def fit(self, dataset_train: BaseSeqDataset, y_train: Optional[List[List]] = None,
             dataset_valid: Optional[BaseSeqDataset] = None, y_valid: Optional[List[List]] = None,
-            verbose: Optional[bool] = False, **kwargs: Any):
+            verbose: Optional[bool] = False, *args: Any, **kwargs: Any):
         """Abstract method for fitting training data.
 
         Parameters

@@ -22,21 +22,8 @@ def check_weak_labels(dataset: Union[BaseDataset, np.ndarray]) -> np.ndarray:
 
 
 def split_labeled_unlabeled(dataset: BaseDataset, cut_tied: Optional[bool] = False) -> Tuple[BaseDataset, BaseDataset]:
-    path = dataset.path
-    split = dataset.split
-    labeled_dataset = type(dataset)(path=path)
-    labeled_dataset.split = split
-    unlabeled_dataset = type(dataset)(path=path)
-    unlabeled_dataset.split = split
-
-    ids = np.array(dataset.ids)
-    labels = np.array(dataset.labels)
-    examples = np.array(dataset.examples)
     weak_labels = np.array(dataset.weak_labels)
-    features = dataset.features
-
     labeled_idx = []
-    unlabeled_idx = []
     for i, l in enumerate(weak_labels):
         counter = Counter()
         weaklabels_cnt = 0
@@ -45,35 +32,15 @@ def split_labeled_unlabeled(dataset: BaseDataset, cut_tied: Optional[bool] = Fal
                 counter[l_] += 1
                 weaklabels_cnt += 1
         lst = counter.most_common()  # .values()
-        if np.max(l) <= -1:
-            unlabeled_idx.append(i)  # = []
-        else:
-            if cut_tied and (len(lst) > 1 and lst[0][-1] - lst[1][-1] <= 0):  # or weaklabels_cnt<=1:
-                unlabeled_idx.append(i)  # = []
-            else:
+        if np.max(l) > -1:
+            if not cut_tied or (len(lst) > 1 and lst[0][-1] - lst[1][-1] > 0):  # or weaklabels_cnt<=1:
                 labeled_idx.append(i)  # = []
 
-    if len(unlabeled_idx) == 0:
-        warnings.warn('No unlabeled data found! Use full dataset uas unlabeled dataset')
+    if len(labeled_idx) == len(weak_labels):
+        warnings.warn('No unlabeled data found! Use full dataset us unlabeled dataset')
         return dataset, dataset
     else:
-        unlabeled_idx = np.array(unlabeled_idx)
-        unlabeled_dataset.ids = ids[unlabeled_idx]
-        unlabeled_dataset.labels = labels[unlabeled_idx]
-        unlabeled_dataset.weak_labels = weak_labels[unlabeled_idx]
-        unlabeled_dataset.examples = examples[unlabeled_idx]
-        if features is not None:
-            unlabeled_dataset.features = features[unlabeled_idx]
-
-    labeled_idx = np.array(labeled_idx)
-    labeled_dataset.ids = ids[labeled_idx]
-    labeled_dataset.labels = labels[labeled_idx]
-    labeled_dataset.weak_labels = weak_labels[labeled_idx]
-    labeled_dataset.examples = examples[labeled_idx]
-    if features is not None:
-        labeled_dataset.features = features[labeled_idx]
-
-    return labeled_dataset, unlabeled_dataset
+        return dataset.create_split(labeled_idx)
 
 
 def split_conf_unconf_by_percentile(dataset: BaseDataset, y: Optional[np.ndarray] = None, percentile: float = 0.2,

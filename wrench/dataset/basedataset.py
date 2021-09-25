@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import Any, List, Optional, Union, Callable
 
 import numpy as np
+import pandas as pd
 from sklearn import preprocessing
+from sklearn.cluster import KMeans
 from snorkel.labeling import LFAnalysis
 from tqdm.auto import tqdm
 
@@ -210,19 +212,41 @@ class BaseDataset(ABC):
         lf_summary = LFAnalysis(L=L).lf_summary(Y=Y)
         return lf_summary
 
-    def summary(self):
+    def summary(self, n_clusters=10, features=None, return_lf_summary=False):
         summary_d = {}
         L = np.array(self.weak_labels)
         Y = np.array(self.labels)
-        summary_d['n_class'] = len(self.id2label)
-        summary_d['n_lfs'] = L.shape[1]
+
+        summary_d['n_class'] = self.n_class
         summary_d['n_data'], summary_d['n_lfs'] = L.shape
-        summary_d['n_unlabeled_data'] = np.sum(np.all(L == -1, axis=1))
-        lf_summary = LFAnalysis(L=L).lf_summary(Y=Y)
-        summary_d['avr_coverage'] = lf_summary['Coverage'].mean()
-        summary_d['avr_overlap'] = lf_summary['Overlaps'].mean()
-        summary_d['avr_conflict'] = lf_summary['Conflicts'].mean()
-        summary_d['avr_acc'] = lf_summary['Emp. Acc.'].mean()
-        uncovered_rate = summary_d['n_unlabeled_data'] / summary_d['n_data']
+        summary_d['n_uncovered_data'] = np.sum(np.all(L == -1, axis=1))
+        uncovered_rate = summary_d['n_uncovered_data'] / summary_d['n_data']
         summary_d['overall_coverage'] = (1 - uncovered_rate)
-        return summary_d
+
+        lf_summary = LFAnalysis(L=L).lf_summary(Y=Y)
+        summary_d['lf_avr_coverage'] = lf_summary['Coverage'].mean()
+        summary_d['lf_avr_overlap'] = lf_summary['Overlaps'].mean()
+        summary_d['lf_avr_conflict'] = lf_summary['Conflicts'].mean()
+        summary_d['lf_avr_acc'] = lf_summary['Emp. Acc.'].mean()
+
+        # calc cmi
+        from ..utils import calc_cmi_matrix, cluster_based_accuracy_variance
+        cmi_matrix = calc_cmi_matrix(Y, L)
+        lf_cmi = np.ma.masked_invalid(cmi_matrix).mean(1).data
+        summary_d['lf_avr_cmi'] = lf_cmi.mean()
+        lf_summary['Avr. CMI'] = pd.Series(lf_cmi)
+
+        # calc data dependency
+        if hasattr(self, 'features') and features is None:
+            features = self.features
+        if features is not None:
+            kmeans = KMeans(n_clusters=n_clusters).fit(features)
+            cluster_labels = kmeans.labels_
+            acc_var = np.array([cluster_based_accuracy_variance(Y, L[:, i], cluster_labels) for i in range(self.n_lf)])
+            summary_d['lf_avr_acc_var'] = acc_var.mean()
+            lf_summary['Acc. Var.'] = pd.Series(acc_var)
+
+        if return_lf_summary:
+            return summary_d, lf_summary
+        else:
+            return summary_d

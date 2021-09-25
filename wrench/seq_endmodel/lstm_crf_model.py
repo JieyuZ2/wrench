@@ -137,7 +137,7 @@ class LSTMTaggerModel(BaseTorchSeqModel):
                  word_emb_dim: Optional[int] = 100,
                  word_hidden_dim: Optional[int] = 200,
                  word_feature_extractor: Optional[str] = 'LSTM',
-                 n_lstm_layer: Optional[int] = 1,
+                 n_word_hidden_layer: Optional[int] = 1,
 
                  use_char: Optional[bool] = True,
                  char_emb_dim: Optional[int] = 30,
@@ -158,7 +158,7 @@ class LSTMTaggerModel(BaseTorchSeqModel):
             'word_emb_dim'          : word_emb_dim,
             'word_hidden_dim'       : word_hidden_dim,
             'word_feature_extractor': word_feature_extractor,
-            'n_lstm_layer'          : n_lstm_layer,
+            'n_word_hidden_layer'   : n_word_hidden_layer,
 
             'use_char'              : use_char,
             'char_emb_dim'          : char_emb_dim,
@@ -258,7 +258,7 @@ class LSTMTaggerModel(BaseTorchSeqModel):
                             'loss'              : loss.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            'best_step'        : self.best_step,
+                            'best_step'         : self.best_step,
                         }
                         last_step_log.update(history[step])
 

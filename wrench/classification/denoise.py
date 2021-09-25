@@ -90,7 +90,7 @@ class Denoise(BaseTorchClassModel):
             'n_steps'         : n_steps,
             'grad_norm'       : grad_norm,
             'use_lr_scheduler': use_lr_scheduler,
-            'binary_mode': False,
+            'binary_mode'     : False,
         }
         self.model: Optional[AssembleModel] = None
         self.label_model: Optional[BaseLabelModel] = None
@@ -137,7 +137,7 @@ class Denoise(BaseTorchClassModel):
         labeled_dataset, unlabeled_dataset = split_labeled_unlabeled(dataset_train, cut_tied=cut_tied)
         labeled_dataloader = DataLoader(TorchDataset(labeled_dataset, n_data=n_steps * hyperparas['batch_size']),
                                         batch_size=hyperparas['batch_size'], shuffle=True)
-        unlabeled_dataloader = DataLoader(TorchDataset(unlabeled_dataset, n_data=n_steps * hyperparas['batch_size']),
+        unlabeled_dataloader = DataLoader(TorchDataset(unlabeled_dataset),
                                           batch_size=hyperparas['batch_size'], shuffle=True)
         unlabeled_dataloader = sample_batch(unlabeled_dataloader)
 
@@ -232,7 +232,7 @@ class Denoise(BaseTorchClassModel):
                             'loss_unsup'        : loss_unsup.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            'best_step'        : self.best_step,
+                            'best_step'         : self.best_step,
                         }
                         last_step_log.update(history[step])
 

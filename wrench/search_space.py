@@ -87,7 +87,7 @@ SEARCH_SPACE = {
 
         'word_hidden_dim'       : [200],
         'word_feature_extractor': ['GRU', 'LSTM'],
-        'n_lstm_layer'          : [1],
+        'n_word_hidden_layer'   : [1],
 
         'use_char'              : [True],
         'char_emb_dim'          : [30],

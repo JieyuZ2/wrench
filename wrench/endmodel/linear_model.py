@@ -113,7 +113,7 @@ class LogRegModel(BaseTorchClassModel):
                             'loss'              : loss.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            'best_step'        : self.best_step,
+                            'best_step'         : self.best_step,
                         }
                         last_step_log.update(history[step])
 

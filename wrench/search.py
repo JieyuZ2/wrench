@@ -5,8 +5,8 @@ import random
 import sys
 import threading
 import warnings
-from functools import partial
 from copy import deepcopy
+from functools import partial
 from typing import Any, Dict, Optional, Union, Callable
 
 import optuna

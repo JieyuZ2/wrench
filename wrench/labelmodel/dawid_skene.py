@@ -43,7 +43,7 @@ class DawidSkene(BaseLabelModel):
                  **kwargs: Any):
         super().__init__()
         self.hyperparas = {
-            'n_epochs': n_epochs,
+            'n_epochs' : n_epochs,
             'tolerance': tolerance,
         }
 

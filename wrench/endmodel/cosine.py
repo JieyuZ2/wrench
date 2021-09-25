@@ -144,6 +144,7 @@ class Cosine(BaseTorchClassModel):
         mu = hyperparas['mu']
         lamda = hyperparas['lamda']
 
+        assert config.backbone_config['name'] != 'LogReg'
         model = self._init_model(
             dataset=dataset_train,
             n_class=dataset_train.n_class,
@@ -211,7 +212,7 @@ class Cosine(BaseTorchClassModel):
                                 'loss'              : loss.item(),
                                 f'val_{metric}'     : metric_value,
                                 f'best_val_{metric}': self.best_metric_value,
-                                'best_step'        : self.best_step,
+                                'best_step'         : self.best_step,
                             }
                             last_step_log.update(history[step])
 
@@ -307,7 +308,7 @@ class Cosine(BaseTorchClassModel):
                             'loss_distill'      : loss_distill.item(),
                             f'val_{metric}'     : metric_value,
                             f'best_val_{metric}': self.best_metric_value,
-                            'best_step'        : self.best_step,
+                            'best_step'         : self.best_step,
                         }
                         last_step_log.update(history_selftrain[step])
 
