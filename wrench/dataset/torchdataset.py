@@ -43,8 +43,19 @@ class TorchDataset(Dataset):
         return d
 
 
-class BERTTorchTextClassDataset(Dataset):
-    def __init__(self, dataset: BaseDataset, tokenizer, max_seq_length, n_data: Optional[int] = 0):
+class BERTTorchTextClassDataset(TorchDataset):
+    def __init__(self,
+                 dataset: BaseDataset,
+                 tokenizer,
+                 max_seq_length: Optional[int] = 512,
+                 n_data: Optional[int] = 0,
+                 return_features: Optional[bool] = False,
+                 return_weak_labels: Optional[bool] = False,
+                 ):
+        super(BERTTorchTextClassDataset, self).__init__(dataset, n_data)
+        self.return_features = return_features
+        self.return_weak_labels = return_weak_labels
+
         self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
 
@@ -53,19 +64,6 @@ class BERTTorchTextClassDataset(Dataset):
 
         self.input_ids_tensor = input_ids_tensor
         self.input_mask_tensor = input_mask_tensor
-
-        self.labels = dataset.labels
-        self.weak_labels = np.array(dataset.weak_labels, dtype=np.float32)
-        self.data = dataset.examples
-        n_data_ = len(self.data)
-        self.n_data_ = n_data_
-        if n_data > 0:
-            self.n_data = math.ceil(n_data / n_data_) * n_data_
-        else:
-            self.n_data = n_data_
-
-    def __len__(self):
-        return self.n_data
 
     def convert_corpus_to_tensor(self, corpus):
 
@@ -89,11 +87,26 @@ class BERTTorchTextClassDataset(Dataset):
             'input_ids': self.input_ids_tensor[idx],
             'mask'     : self.input_mask_tensor[idx],
         }
+        if self.return_features:
+            d['features'] = self.features[idx]
+        if self.return_weak_labels:
+            d['weak_labels'] = self.weak_labels[idx]
         return d
 
 
-class BERTTorchRelationClassDataset(Dataset):
-    def __init__(self, dataset: BaseDataset, tokenizer, max_seq_length, n_data: Optional[int] = 0):
+class BERTTorchRelationClassDataset(TorchDataset):
+    def __init__(self,
+                 dataset: BaseDataset,
+                 tokenizer,
+                 max_seq_length: Optional[int] = 512,
+                 n_data: Optional[int] = 0,
+                 return_features: Optional[bool] = False,
+                 return_weak_labels: Optional[bool] = False,
+                 ):
+        super(BERTTorchRelationClassDataset, self).__init__(dataset, n_data)
+        self.return_features = return_features
+        self.return_weak_labels = return_weak_labels
+
         self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
 
@@ -103,19 +116,6 @@ class BERTTorchRelationClassDataset(Dataset):
         self.input_mask_tensor = input_mask_tensor
         self.e1_mask_tensor = e1_mask_tensor
         self.e2_mask_tensor = e2_mask_tensor
-
-        self.labels = dataset.labels
-        self.weak_labels = np.array(dataset.weak_labels, dtype=np.float32)
-        self.data = dataset.examples
-        n_data_ = len(self.data)
-        self.n_data_ = n_data_
-        if n_data > 0:
-            self.n_data = math.ceil(n_data / n_data_) * n_data_
-        else:
-            self.n_data = n_data_
-
-    def __len__(self):
-        return self.n_data
 
     def convert_corpus_to_tensor(self, examples):
         max_seq_length = self.max_seq_length
@@ -211,4 +211,8 @@ class BERTTorchRelationClassDataset(Dataset):
             'e1_mask'  : self.e1_mask_tensor[idx],
             'e2_mask'  : self.e2_mask_tensor[idx],
         }
+        if self.return_features:
+            d['features'] = self.features[idx]
+        if self.return_weak_labels:
+            d['weak_labels'] = self.weak_labels[idx]
         return d

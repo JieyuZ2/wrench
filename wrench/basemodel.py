@@ -102,7 +102,7 @@ class BaseTorchModel(BaseModel, ABC):
         return optimizer_, lr_scheduler_
 
     @abstractmethod
-    def _init_valid_dataloader(self, dataset_valid) -> DataLoader:
+    def _init_valid_dataloader(self, dataset_valid, **kwargs: Any) -> DataLoader:
         pass
 
     @abstractmethod
@@ -121,7 +121,9 @@ class BaseTorchModel(BaseModel, ABC):
                     metric: Optional[Union[str, Callable]] = 'acc',
                     direction: Optional[str] = 'auto',
                     patience: Optional[int] = 20,
-                    tolerance: Optional[float] = -1.0):
+                    tolerance: Optional[float] = -1.0,
+                    **kwargs: Any,
+                    ):
 
         self.patience = patience
         self.tolerance = tolerance
@@ -131,7 +133,7 @@ class BaseTorchModel(BaseModel, ABC):
         assert direction in ['maximize', 'minimize'], f'direction should be in ["maximize", "minimize"]!'
         self.direction = direction
 
-        self.valid_dataloader = self._init_valid_dataloader(dataset_valid)
+        self.valid_dataloader = self._init_valid_dataloader(dataset_valid, **kwargs)
 
         self._reset_valid()
 
@@ -333,20 +335,39 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                                dataset_train: BaseDataset,
                                n_steps: int,
                                config: Config,
+                               return_features: Optional[bool] = False,
+                               return_weak_labels: Optional[bool] = False,
                                ) -> DataLoader:
         hyperparas = config.hyperparas
-        if isinstance(self.model, BERTBackBone):
+        if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
             max_tokens = config.backbone_config['paras']['max_tokens']
-            torch_dataset = get_bert_torch_dataset_class(dataset_train)(dataset_train, self.tokenizer, max_tokens, n_data=n_steps * hyperparas['batch_size'])
+            torch_dataset = get_bert_torch_dataset_class(dataset_train)(
+                dataset_train,
+                self.tokenizer,
+                max_tokens,
+                n_data=n_steps * hyperparas['batch_size'],
+                return_features=return_features,
+                return_weak_labels=return_weak_labels,
+            )
             train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'], shuffle=True, collate_fn=construct_collate_fn_trunc_pad('mask'))
         else:
             torch_dataset = TorchDataset(dataset_train, n_data=n_steps * hyperparas['batch_size'])
             train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'], shuffle=True)
         return train_dataloader
 
-    def _init_valid_dataloader(self, dataset_valid: BaseDataset) -> DataLoader:
-        if isinstance(self.model, BERTBackBone):
-            torch_dataset = get_bert_torch_dataset_class(dataset_valid)(dataset_valid, self.tokenizer, 512)
+    def _init_valid_dataloader(self,
+                               dataset_valid: BaseDataset,
+                               return_features: Optional[bool] = False,
+                               return_weak_labels: Optional[bool] = False,
+                               ) -> DataLoader:
+        if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
+            torch_dataset = get_bert_torch_dataset_class(dataset_valid)(
+                dataset_valid,
+                self.tokenizer,
+                512,
+                return_features=return_features,
+                return_weak_labels=return_weak_labels,
+            )
             valid_dataloader = DataLoader(torch_dataset, batch_size=self.hyperparas['test_batch_size'], shuffle=False, collate_fn=construct_collate_fn_trunc_pad('mask'))
             return valid_dataloader
         else:
@@ -371,6 +392,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
             direction=direction,
             patience=patience,
             tolerance=tolerance,
+            **kwargs
         )
 
         if isinstance(metric, Callable):

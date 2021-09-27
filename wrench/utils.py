@@ -171,12 +171,13 @@ def construct_collate_fn_trunc_pad(mask: str):
         batch_mask = batch[mask]
         batch_max_seq = batch_mask.sum(dim=1).max()
         for k, v in batch.items():
-            ndim = batch[k].ndim
-            if ndim > 1:
-                if ndim == 2:
-                    batch[k] = v[:, :batch_max_seq]
-                else:
-                    batch[k] = v[:, :batch_max_seq, :]
+            if k not in ['weak_labels', 'features']:
+                ndim = batch[k].ndim
+                if ndim > 1:
+                    if ndim == 2:
+                        batch[k] = v[:, :batch_max_seq]
+                    else:
+                        batch[k] = v[:, :batch_max_seq, :]
         return batch
 
     return collate_fn_trunc_pad

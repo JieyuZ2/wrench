@@ -42,7 +42,7 @@ class RuleNetwork(nn.Module):
 class ImplyLossModel(BackBone):
     def __init__(self, input_size, n_rules, n_class, backbone, hidden_size, q, dropout=0.8):
         super(ImplyLossModel, self).__init__(n_class=n_class)
-        self.backbone_model = backbone
+        self.backbone = backbone
         self.rule_network = RuleNetwork(input_size, n_rules, hidden_size, dropout)
         self.n_rules = n_rules
         self.rule_embedding = nn.Parameter(torch.eye(n_rules), requires_grad=False)
@@ -57,7 +57,7 @@ class ImplyLossModel(BackBone):
 
     def forward(self, batch):
         device = self.get_device()
-        proba = torch.softmax(self.backbone_model(batch), dim=1)
+        proba = torch.softmax(self.backbone(batch), dim=1)
         weak_labels_list = batch['weak_labels'].to(device).long()
         features = batch['features'].to(device)
 
@@ -115,7 +115,7 @@ class ImplyLossModel(BackBone):
             loss_phi_3 = 0.0
 
         # Eq (1)
-        predict_l = self.backbone_model(label_batch)
+        predict_l = self.backbone(label_batch)
         loss_theta = cross_entropy_with_probs(predict_l, y_l, reduction='mean')
 
         loss = loss_theta + loss_phi_1 + loss_phi_2 + loss_phi_3
@@ -130,7 +130,7 @@ class ImplyLossModel(BackBone):
 
         # Eq (4)
         r_score = self.get_r_score(feature_u)
-        proba = torch.softmax(self.backbone_model(unlabeled_batch), dim=1)
+        proba = torch.softmax(self.backbone(unlabeled_batch), dim=1)
         proba_expand = proba[torch.arange(batch_size).unsqueeze(1), weak_labels]
 
         mask = weak_labels != ABSTAIN
@@ -333,7 +333,7 @@ class ImplyLoss(BaseTorchClassModel):
             probas = []
             for batch in valid_dataloader:
                 if mode == 'classifier':
-                    logits = model.backbone_model(batch)
+                    logits = model.backbone(batch)
                     proba = torch.softmax(logits, dim=-1)
                 elif mode == 'implyloss':
                     proba = torch.softmax(model(batch), dim=-1)
