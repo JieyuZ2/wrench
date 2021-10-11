@@ -23,13 +23,13 @@ For more information, checkout our publications:
 If you find this repository helpful, feel free to cite our publication:
 
 ```
-@misc{zhang2021wrench,
-      title={WRENCH: A Comprehensive Benchmark for Weak Supervision}, 
-      author={Jieyu Zhang and Yue Yu and Yinghao Li and Yujing Wang and Yaming Yang and Mao Yang and Alexander Ratner},
-      year={2021},
-      eprint={2109.11377},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@inproceedings{
+zhang2021wrench,
+title={{WRENCH}: A Comprehensive Benchmark for Weak Supervision},
+author={Jieyu Zhang and Yue Yu and Yinghao Li and Yujing Wang and Yaming Yang and Mao Yang and Alexander Ratner},
+booktitle={Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track},
+year={2021},
+url={https://openreview.net/forum?id=Q9SKS5k8io}
 }
 ```
 
