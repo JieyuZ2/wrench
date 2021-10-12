@@ -113,7 +113,7 @@ class Denoise(BaseTorchClassModel):
             dataset_train: BaseDataset,
             dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
-            cut_tied: Optional[bool] = True,
+            cut_tied: Optional[bool] = False,
             valid_mode: Optional[str] = 'feature',
             evaluation_step: Optional[int] = 100,
             metric: Optional[Union[str, Callable]] = 'acc',

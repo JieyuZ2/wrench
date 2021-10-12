@@ -115,7 +115,7 @@ class Cosine(BaseTorchClassModel):
             dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
             pretrained_model: str = None,
-            cut_tied: Optional[bool] = True,
+            cut_tied: Optional[bool] = False,
             soft_labels: Optional[bool] = False,
             evaluation_step: Optional[int] = 10,
             metric: Optional[Union[str, Callable]] = 'acc',

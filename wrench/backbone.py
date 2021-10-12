@@ -89,12 +89,12 @@ class BertTextClassifier(BERTBackBone):
     Bert with a MLP on top for text classification
     """
 
-    def __init__(self, n_class, model_name='bert-base-cased', fine_tune_layers=-1, max_length=512, binary_mode=False, **kwargs):
+    def __init__(self, n_class, model_name='bert-base-cased', fine_tune_layers=-1, max_tokens=512, binary_mode=False, **kwargs):
         super(BertTextClassifier, self).__init__(n_class=n_class, model_name=model_name, fine_tune_layers=fine_tune_layers, binary_mode=binary_mode)
 
         self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
         self.classifier = nn.Linear(self.config.hidden_size, self.config.num_labels)
-        self.max_length = max_length
+        self.max_tokens = max_tokens
 
     def forward(self, batch, return_features=False):  # inputs: [batch, t]
         device = self.get_device()
