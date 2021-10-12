@@ -61,20 +61,23 @@ class LogReg(BackBone):
 
 
 class MLP(BackBone):
-    def __init__(self, n_class, input_size, hidden_size=100, dropout=0.0, binary_mode=False, **kwargs):
+    def __init__(self, n_class, input_size, n_hidden_layers=1, hidden_size=100, dropout=0.0, binary_mode=False, **kwargs):
         super(MLP, self).__init__(n_class=n_class, binary_mode=binary_mode)
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, self.n_class)
-        self.dropout = nn.Dropout(p=dropout)
+        layers = [nn.Linear(input_size, hidden_size), nn.ReLU(), nn.Dropout(p=dropout)]
+        for i in range(n_hidden_layers-1):
+            layers.extend([nn.Linear(hidden_size, hidden_size), nn.ReLU(), nn.Dropout(p=dropout)])
+        self.fcs = nn.Sequential(*layers)
+        self.last_layer = nn.Linear(hidden_size, self.n_class)
 
     def forward(self, batch, return_features=False):
         x = batch['features'].to(self.get_device())
-        h = F.relu(self.dropout(self.fc1(x)))
-        output = self.fc2(h)
+        h = self.fcs(x)
+        output = self.last_layer(h)
         if return_features:
             return output, h
         else:
             return output
+
 
 
 """ BERT for text classification """
