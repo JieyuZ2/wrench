@@ -135,8 +135,8 @@ def grid_search(model: BaseModel,
                 n_repeats: Optional[int] = 1,
                 n_trials: Optional[int] = 100,
                 n_jobs: Optional[int] = 1,
-                min_trials: Optional[int] = -1,
-                study_patience: Optional[int] = -1,
+                min_trials: Optional[Union[int, float]] = -1,
+                study_patience: Optional[Union[int, float]] = -1,
                 prune_threshold: Optional[float] = -1,
                 trial_timeout: Optional[int] = -1,
                 parallel: Optional[bool] = False,
@@ -153,10 +153,18 @@ def grid_search(model: BaseModel,
                      metric=metric,
                      direction=direction,
                      kwargs=kwargs)
-    study = optuna.create_study(study_name=study_name,
-                                sampler=RandomGridSampler(search_space, filter_fn=filter_fn),
-                                direction=direction
-                                )
+    study = optuna.create_study(
+        study_name=study_name,
+        sampler=RandomGridSampler(search_space, filter_fn=filter_fn),
+        direction=direction
+    )
+
+    n_grids = len(study.sampler._all_grids)
+    if isinstance(min_trials, float):
+        min_trials = int(min_trials * n_grids)
+    if isinstance(study_patience, float):
+        study_patience = int(study_patience * n_grids)
+
     callbacks = []
     if study_patience > 0:
         callbacks.append(StopWhenNotImproved(patience=study_patience, min_trials=min_trials))

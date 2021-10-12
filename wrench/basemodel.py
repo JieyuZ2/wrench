@@ -12,6 +12,7 @@ from snorkel.utils import probs_to_preds
 from torch import optim, nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
+from transformers import AdamW, get_linear_schedule_with_warmup
 
 from . import backbone
 from .backbone import BackBone, BERTBackBone
@@ -92,11 +93,17 @@ class BaseTorchModel(BaseModel, ABC):
         parameters = filter(lambda p: p.requires_grad, model.parameters())
         optimizer = config.optimizer_config['name']
         optimizer_config = config.optimizer_config['paras']
-        optimizer_ = getattr(optim, optimizer)(parameters, **optimizer_config)
+        if optimizer == 'default':
+            optimizer_ = AdamW(parameters, lr=optimizer_config['lr'], weight_decay=optimizer_config['weight_decay'])
+        else:
+            optimizer_ = getattr(optim, optimizer)(parameters, **optimizer_config)
         if hasattr(config, 'lr_scheduler_config'):
             lr_scheduler = config.lr_scheduler_config['name']
-            lr_scheduler_config = config.lr_scheduler_config['paras']
-            lr_scheduler_ = getattr(optim.lr_scheduler, lr_scheduler)(optimizer_, **lr_scheduler_config)
+            if lr_scheduler == 'default':
+                lr_scheduler_ = get_linear_schedule_with_warmup(optimizer_, num_warmup_steps=0, num_training_steps=config.hyperparas['n_steps'])
+            else:
+                lr_scheduler_config = config.lr_scheduler_config['paras']
+                lr_scheduler_ = getattr(optim.lr_scheduler, lr_scheduler)(optimizer_, **lr_scheduler_config)
         else:
             lr_scheduler_ = None
         return optimizer_, lr_scheduler_
