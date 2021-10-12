@@ -18,12 +18,14 @@ class Snorkel(BaseLabelModel):
                  lr: Optional[float] = 0.01,
                  l2: Optional[float] = 0.0,
                  n_epochs: Optional[int] = 100,
+                 seed: Optional[int] = None,
                  **kwargs: Any):
         super().__init__()
         self.hyperparas = {
             'lr'      : lr,
             'l2'      : l2,
             'n_epochs': n_epochs,
+            'seed'    : seed or np.random.randint(1e6),
         }
         self.model = None
 
@@ -34,7 +36,6 @@ class Snorkel(BaseLabelModel):
             n_class: Optional[int] = None,
             balance: Optional[np.ndarray] = None,
             verbose: Optional[bool] = False,
-            seed: int = None,
             **kwargs: Any):
 
         self._update_hyperparas(**kwargs)
@@ -51,11 +52,15 @@ class Snorkel(BaseLabelModel):
         n_class = len(balance)
         self.n_class = n_class
 
-        seed = seed or np.random.randint(1e6)
-
         label_model = LabelModel(cardinality=n_class, verbose=verbose)
-        label_model.fit(L_train=L, class_balance=balance, n_epochs=self.hyperparas['n_epochs'],
-                        lr=self.hyperparas['lr'], l2=self.hyperparas['l2'], seed=seed)
+        label_model.fit(
+            L_train=L,
+            class_balance=balance,
+            n_epochs=self.hyperparas['n_epochs'],
+            lr=self.hyperparas['lr'],
+            l2=self.hyperparas['l2'],
+            seed=self.hyperparas['seed']
+        )
 
         self.model = label_model
 

@@ -18,12 +18,14 @@ class GenerativeModel(BaseLabelModel):
                  lr: Optional[float] = 1e-4,
                  l2: Optional[float] = 1e-1,
                  n_epochs: Optional[int] = 100,
+                 seed: Optional[int] = None,
                  **kwargs: Any):
         super().__init__()
         self.hyperparas = {
             'lr'      : lr,
             'l2'      : l2,
             'n_epochs': n_epochs,
+            'seed'    : seed or np.random.randint(1e6),
         }
         self.model = None
 
@@ -35,7 +37,6 @@ class GenerativeModel(BaseLabelModel):
             balance: Optional[np.ndarray] = None,
             threads: Optional[int] = 10,
             verbose: Optional[bool] = False,
-            seed: int = None,
             **kwargs: Any):
 
         self._update_hyperparas(**kwargs)
@@ -53,14 +54,19 @@ class GenerativeModel(BaseLabelModel):
         self.n_class = n_class
 
         L = self.process_label_matrix(L)
-        seed = seed or np.random.randint(1e6)
 
         ## TODO support multiclass class prior
         log_y_prior = np.log(balance)
-        label_model = SrcGenerativeModel(cardinality=n_class, class_prior=False, seed=seed)
-        label_model.train(L=L, init_class_prior=log_y_prior, epochs=self.hyperparas['n_epochs'],
-                          step_size=self.hyperparas['lr'], reg_param=self.hyperparas['l2'],
-                          verbose=verbose, cardinality=n_class, threads=threads)
+        label_model = SrcGenerativeModel(cardinality=n_class, class_prior=False, seed=self.hyperparas['seed'])
+        label_model.train(
+            L=L,
+            init_class_prior=log_y_prior,
+            epochs=self.hyperparas['n_epochs'],
+            step_size=self.hyperparas['lr'],
+            reg_param=self.hyperparas['l2'],
+            verbose=verbose,
+            cardinality=n_class,
+            threads=threads)
 
         self.model = label_model
 

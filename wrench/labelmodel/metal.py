@@ -85,12 +85,14 @@ class MeTaL(BaseLabelModel):
                  lr: Optional[float] = 0.001,
                  l2: Optional[float] = 0.0,
                  n_epochs: Optional[int] = 1000,
+                 seed: Optional[int] = None,
                  **kwargs: Any):
         super().__init__()
         self.hyperparas = {
             'lr'      : lr,
             'l2'      : l2,
             'n_epochs': n_epochs,
+            'seed'    : seed or np.random.randint(1e6),
         }
         self.model = None
 
@@ -102,7 +104,6 @@ class MeTaL(BaseLabelModel):
             balance: Optional[np.ndarray] = None,
             dependency_graph: Optional[List] = [],
             verbose: Optional[bool] = False,
-            seed: int = None,
             **kwargs: Any):
 
         self._update_hyperparas(**kwargs)
@@ -119,13 +120,17 @@ class MeTaL(BaseLabelModel):
         n_class = len(balance)
         self.n_class = n_class
 
-        seed = seed or np.random.randint(1e6)
-        label_model = LabelModel(k=n_class, seed=seed)
-        label_model.train_model(L_train=L + 1, class_balance=balance, deps=dependency_graph,
-                                n_epochs=self.hyperparas['n_epochs'],
-                                lr=self.hyperparas['lr'],
-                                l2=self.hyperparas['l2'],
-                                seed=seed, verbose=verbose)
+        label_model = LabelModel(k=n_class, seed=self.hyperparas['seed'])
+        label_model.train_model(
+            L_train=L + 1,
+            class_balance=balance,
+            deps=dependency_graph,
+            n_epochs=self.hyperparas['n_epochs'],
+            lr=self.hyperparas['lr'],
+            l2=self.hyperparas['l2'],
+            seed=self.hyperparas['seed'],
+            verbose=verbose
+        )
 
         self.model = label_model
 
