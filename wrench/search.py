@@ -50,13 +50,16 @@ def exit_after(s):
 
 
 class StopWhenNotImproved:
-    def __init__(self, patience: int):
+    def __init__(self, patience: int, min_trials: int):
         self.patience = patience
+        self.min_trials = min_trials
         self.no_improve_cnt = 0
+        self.trial_cnt = 0
         self.best_value = None
 
     def __call__(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> None:
         if trial.state == optuna.trial.TrialState.COMPLETE:
+            self.trial_cnt += 1
             current_value = trial.value
             if self.best_value is None:
                 self.best_value = current_value
@@ -65,9 +68,10 @@ class StopWhenNotImproved:
                     self.best_value = current_value
                     self.no_improve_cnt = 0
                 else:
-                    self.no_improve_cnt += 1
-                    if self.no_improve_cnt >= self.patience:
-                        study.stop()
+                    if self.trial_cnt > self.min_trials:
+                        self.no_improve_cnt += 1
+                        if self.no_improve_cnt >= self.patience:
+                            study.stop()
 
 
 class RandomGridSampler(GridSampler):
@@ -131,7 +135,9 @@ def grid_search(model: BaseModel,
                 n_repeats: Optional[int] = 1,
                 n_trials: Optional[int] = 100,
                 n_jobs: Optional[int] = 1,
+                min_trials: Optional[int] = -1,
                 study_patience: Optional[int] = -1,
+                prune_threshold: Optional[float] = -1,
                 trial_timeout: Optional[int] = -1,
                 parallel: Optional[bool] = False,
                 study_name: Optional[str] = None,
@@ -153,7 +159,7 @@ def grid_search(model: BaseModel,
                                 )
     callbacks = []
     if study_patience > 0:
-        callbacks.append(StopWhenNotImproved(patience=study_patience))
+        callbacks.append(StopWhenNotImproved(patience=study_patience, min_trials=min_trials))
 
     if parallel:
         if trial_timeout > 0: warnings.warn('Parallel searching does not support trial time out!')
@@ -179,6 +185,9 @@ def grid_search(model: BaseModel,
                 metric_value = 0
                 for i in trange(n_repeats):
                     val = worker((suggestions, i))
+                    if i == 0 and prune_threshold > 0 and trial._trial_id > 0:
+                        if (trial.study.best_value - val) > (prune_threshold * trial.study.best_value):
+                            return val
                     metric_value += val
                 value = metric_value / n_repeats
                 return value
