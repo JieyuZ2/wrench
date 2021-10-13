@@ -68,7 +68,7 @@ class BERTTorchTextClassDataset(TorchDataset):
     def convert_corpus_to_tensor(self, corpus):
 
         outputs = self.tokenizer(corpus, return_token_type_ids=False, return_attention_mask=True, padding=True,
-                                 return_tensors='pt', max_tokens=self.max_seq_length, truncation=True)
+                                 return_tensors='pt', max_length=self.max_seq_length, truncation=True)
         input_ids_tensor = outputs['input_ids']
         input_mask_tensor = outputs['attention_mask']
 
