@@ -12,9 +12,8 @@ from transformers import AutoTokenizer
 from ..backbone import BackBone
 from ..basemodel import BaseTorchClassModel, BaseLabelModel
 from ..config import Config
-from ..dataset import sample_batch, BaseDataset, TorchDataset
+from ..dataset import sample_batch, BaseDataset
 from ..dataset.utils import split_labeled_unlabeled
-
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +87,7 @@ class Denoise(BaseTorchClassModel):
             'hidden_size'     : hidden_size,
 
             'batch_size'      : batch_size,
-            'real_batch_size': real_batch_size,
+            'real_batch_size' : real_batch_size,
             'test_batch_size' : test_batch_size,
             'n_steps'         : n_steps,
             'grad_norm'       : grad_norm,
@@ -197,23 +196,23 @@ class Denoise(BaseTorchClassModel):
         history = {}
         last_step_log = {}
         try:
-            with trange(n_steps, desc="[TRAIN] Denoise", unit="steps", disable=not verbose, ncols=200, position=0, leave=True) as pbar:
+            with trange(n_steps, desc="[TRAIN] Denoise", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
                 cnt = 0
                 step = 0
                 model.train()
                 optimizer.zero_grad()
-                for label_batch in labeled_dataloader:
+                for labeled_batch in labeled_dataloader:
 
                     unlabel_batch = next(unlabeled_dataloader)
-                    x_lf_l = label_batch['weak_labels'].to(device)
+                    x_lf_l = labeled_batch['weak_labels'].to(device)
                     x_lf_u = unlabel_batch['weak_labels'].to(device)
-                    idx_l = label_batch['ids'].long().to(device)
+                    idx_l = labeled_batch['ids'].long().to(device)
                     idx_u = unlabel_batch['ids'].long().to(device)
                     y_l = all_y_l.index_select(0, idx_l)
                     Z = all_Z.index_select(0, idx_u)
                     z = all_z.index_select(0, idx_u)
 
-                    predict_l, predict_u, lf_y_l, lf_y_u, fix_score = model(label_batch, unlabel_batch, x_lf_l, x_lf_u)
+                    predict_l, predict_u, lf_y_l, lf_y_u, fix_score = model(labeled_batch, unlabel_batch, x_lf_l, x_lf_u)
 
                     loss_sup = F.cross_entropy(predict_l, y_l)
                     loss_sup_weight = F.cross_entropy(lf_y_l, y_l)
@@ -289,7 +288,7 @@ class Denoise(BaseTorchClassModel):
             model = self.model.to(device)
         else:
             model = self.model
-            device = model.dummy_param.device
+            device = model.get_device()
         model.eval()
         with torch.no_grad():
             if isinstance(dataset, BaseDataset):

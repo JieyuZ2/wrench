@@ -81,12 +81,12 @@ class ImplyLossModel(BackBone):
 
         return proba
 
-    def calculate_labeled_batch_loss(self, label_batch, data_exemplar_matrix):
+    def calculate_labeled_batch_loss(self, labeled_batch, data_exemplar_matrix):
         device = self.get_device()
-        y_l = label_batch['labels'].to(device)
-        feature_l = label_batch['features'].to(device)
-        idx_l = label_batch['ids']
-        weak_labels = label_batch['weak_labels'].long().to(device)
+        y_l = labeled_batch['labels'].to(device)
+        feature_l = labeled_batch['features'].to(device)
+        idx_l = labeled_batch['ids']
+        weak_labels = labeled_batch['weak_labels'].long().to(device)
 
         exemplar_mask = data_exemplar_matrix[idx_l]
         fire_mask = (weak_labels != ABSTAIN) & (~exemplar_mask)
@@ -115,7 +115,7 @@ class ImplyLossModel(BackBone):
             loss_phi_3 = 0.0
 
         # Eq (1)
-        predict_l = self.backbone(label_batch)
+        predict_l = self.backbone(labeled_batch)
         loss_theta = cross_entropy_with_probs(predict_l, y_l, reduction='mean')
 
         loss = loss_theta + loss_phi_1 + loss_phi_2 + loss_phi_3
@@ -257,7 +257,7 @@ class ImplyLoss(BaseTorchClassModel):
         history = {}
         last_step_log = {}
         try:
-            with trange(n_steps, desc="[TRAIN] ImplyLoss", unit="steps", disable=not verbose, ncols=200, position=0, leave=True) as pbar:
+            with trange(n_steps, desc="[TRAIN] ImplyLoss", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:
                 cnt = 0
                 step = 0
                 model.train()
@@ -268,10 +268,10 @@ class ImplyLoss(BaseTorchClassModel):
                         unlabeled_batch,
                     )
 
-                    label_batch = next(labeled_train_dataloader)
+                    labeled_batch = next(labeled_train_dataloader)
 
                     loss_l = model.calculate_labeled_batch_loss(
-                        label_batch,
+                        labeled_batch,
                         data_exemplar_matrix,
                     )
 

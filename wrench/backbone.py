@@ -18,6 +18,10 @@ class BackBone(nn.Module):
         super(BackBone, self).__init__()
         self.dummy_param = nn.Parameter(torch.empty(0))
 
+    @property
+    def device(self):
+        return self.dummy_param.device
+
     def get_device(self):
         return self.dummy_param.device
 
@@ -68,6 +72,7 @@ class MLP(BackBone):
             layers.extend([nn.Linear(hidden_size, hidden_size), nn.ReLU(), nn.Dropout(p=dropout)])
         self.fcs = nn.Sequential(*layers)
         self.last_layer = nn.Linear(hidden_size, self.n_class)
+        self.hidden_size = hidden_size
 
     def forward(self, batch, return_features=False):
         x = batch['features'].to(self.get_device())
@@ -77,7 +82,6 @@ class MLP(BackBone):
             return output, h
         else:
             return output
-
 
 
 """ BERT for text classification """
@@ -95,6 +99,7 @@ class BertTextClassifier(BERTBackBone):
         self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
         self.classifier = nn.Linear(self.config.hidden_size, self.config.num_labels)
         self.max_tokens = max_tokens
+        self.hidden_size = self.config.hidden_size
 
     def forward(self, batch, return_features=False):  # inputs: [batch, t]
         device = self.get_device()
@@ -139,6 +144,7 @@ class BertRelationClassifier(BERTBackBone):
         self.fc_e1 = FClayer(self.config.hidden_size, self.config.hidden_size, dropout=self.config.hidden_dropout_prob)
         self.fc_e2 = FClayer(self.config.hidden_size, self.config.hidden_size, dropout=self.config.hidden_dropout_prob)
         self.output = FClayer(self.config.hidden_size * 3, self.n_class, dropout=self.config.hidden_dropout_prob, activation=False)
+        self.hidden_size = self.config.hidden_size * 3
 
     @staticmethod
     def entity_average(hidden_output, e_mask):

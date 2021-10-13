@@ -208,13 +208,13 @@ class Cosine(BaseTorchClassModel):
                                 logger.info(info)
                                 break
 
-                            history[step] = {
+                            history_pretrain[step] = {
                                 'loss'              : loss.item(),
                                 f'val_{metric}'     : metric_value,
                                 f'best_val_{metric}': self.best_metric_value,
                                 'best_step'         : self.best_step,
                             }
-                            last_step_log.update(history[step])
+                            last_step_log.update(history_pretrain[step])
 
                         last_step_log['loss'] = loss.item()
                         pbar.update()
