@@ -135,6 +135,11 @@ The detailed documentation is coming soon.
 ### classification-to-sequence-tagging wrapper:
 Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/seq_wrapper.py#L43) that adaptes label model for classification task to sequence tagging task.
 
+### methods from related domains:
+| Model | Model Type | Reference | Link to Wrench |
+|:--------|:---------|:------|:------|
+| Meta-Weight-Net | End Model | [link](https://arxiv.org/abs/1902.07379) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/meta_weight_net.py#L34) |
+
 # 🔧  Quick examples
 
 
