@@ -307,7 +307,12 @@ class Denoise(BaseTorchClassModel):
                     x_lf = batch['weak_labels'].to(device)
                     output2, _ = model.attention(x_lf, batch)
                     prob_weak_labels = F.softmax(output2, dim=-1)
-                    proba = 0.5 * (prob_feature + prob_weak_labels)
+
+                    max_prob_feature = torch.max(prob_feature, dim=-1)[0]
+                    max_prob_weak_labels = torch.max(prob_weak_labels, dim=-1)[0]
+                    mask = torch.unsqueeze((max_prob_feature > max_prob_weak_labels).long(), dim=1)
+
+                    proba = mask * prob_feature + (1-mask) * prob_weak_labels
                 elif mode == 'feature':
                     output1 = model.backbone(batch)
                     proba = F.softmax(output1, dim=-1)
