@@ -138,16 +138,16 @@ The detailed documentation is coming soon.
 ### classification-to-sequence-tagging wrapper:
 Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/seq_wrapper.py#L43) that adaptes label model for classification task to sequence tagging task.
 
-## methods from related domains:
+### methods from related domains:
 
-### Robust Learning methods as end model:
+#### Robust Learning methods as end model:
 
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
 | Meta-Weight-Net | End Model | [link](https://arxiv.org/abs/1902.07379) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/meta_weight_net.py#L34) |
 | Learning2ReWeight | End Model | [link](https://arxiv.org/abs/1803.09050) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/learn_to_reweight.py#L20) |
 
-### Weak Supervision with cleaned labels (Semi-Weak Supervision):
+#### Weak Supervision with cleaned labels (Semi-Weak Supervision):
 
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
