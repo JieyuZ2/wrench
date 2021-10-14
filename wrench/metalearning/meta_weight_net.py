@@ -162,7 +162,7 @@ class MetaWeightNet(BaseTorchClassModel):
 
                         meta_batch = next(train_meta_dataloader)
                         outputs = meta_model(meta_batch)
-                        meta_target = meta_batch['labels']
+                        meta_target = meta_batch['labels'].to(device)
                         meta_loss = cross_entropy_with_probs(outputs, meta_target)
 
                         meta_loss.backward()
