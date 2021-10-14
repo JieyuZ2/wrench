@@ -107,6 +107,9 @@ A documentation of dataset format and usage can be found in this [wiki-page](htt
 The detailed documentation is coming soon.
 
 ## 🔧 Available Models
+
+**If you find any of the implementations is wrong/problematic, don't hesitate to raise issue/pull request, we really appreciate it!**
+
 ### classification:
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
@@ -135,10 +138,21 @@ The detailed documentation is coming soon.
 ### classification-to-sequence-tagging wrapper:
 Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/seq_wrapper.py#L43) that adaptes label model for classification task to sequence tagging task.
 
-### methods from related domains:
+## methods from related domains:
+
+### Robust Learning methods as end model:
+
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
 | Meta-Weight-Net | End Model | [link](https://arxiv.org/abs/1902.07379) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/meta_weight_net.py#L34) |
+| Learning2ReWeight | End Model | [link](https://arxiv.org/abs/1803.09050) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/learn_to_reweight.py#L20) |
+
+### Weak Supervision with cleaned labels (Semi-Weak Supervision):
+
+| Model | Model Type | Reference | Link to Wrench |
+|:--------|:---------|:------|:------|
+| ImplyLoss | Joint Model | [link](https://arxiv.org/abs/2004.06025) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/implyloss.py#L42) |
+| ASTRA | Joint Model | [link](https://www.microsoft.com/en-us/research/publication/self-training-weak-supervision-astra/) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/astra.py#L87) |
 
 # 🔧  Quick examples
 
