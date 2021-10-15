@@ -73,7 +73,7 @@ class ImplyLossModel(BackBone):
             r_score = self.rule_network(concat_feature).view(-1, self.n_rules)
 
             fire_mask = (covered_weak_labels_list != ABSTAIN) & (r_score > 0.5)
-            weak_labels_one_hot = torch.eye(self.n_class).to(device)[covered_weak_labels_list]
+            weak_labels_one_hot = F.one_hot(covered_weak_labels_list * fire_mask, num_classes=self.n_class)
             score = weak_labels_one_hot * r_score.unsqueeze(2) + (1 - weak_labels_one_hot) * (1 - r_score.unsqueeze(2))
             score_mean = torch.sum(score * fire_mask.unsqueeze(2), dim=1) / torch.sum(fire_mask, dim=1, keepdim=True)
 

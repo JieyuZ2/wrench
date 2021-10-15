@@ -38,13 +38,12 @@ class RuleAttentionTeacherNetwork(BackBone):
             nn.ReLU(),
             nn.Dropout(p=dropout),
         )
-        self.one_hot_helper = nn.Parameter(torch.eye(n_class), requires_grad=False)
 
     def forward(self, batch, features, proba):
         device = self.get_device()
         weak_labels = batch['weak_labels'].long().to(device)
         mask = weak_labels != ABSTAIN
-        weak_labels_one_hot = self.one_hot_helper[weak_labels]
+        weak_labels_one_hot = F.one_hot(weak_labels * mask, num_classes=self.n_class)
 
         fc_h = self.fcs(features)
         rule_attention = self.rule_embedding(fc_h) * mask
@@ -135,6 +134,7 @@ class Astra(BaseTorchClassModel):
             y_valid: Optional[np.ndarray] = None,
             pretrained_model: str = None,
             valid_mode: Optional[str] = 'student',
+            soft_labels: Optional[bool] = False,
             evaluation_step: Optional[int] = 100,
             metric: Optional[Union[str, Callable]] = 'acc',
             direction: Optional[str] = 'auto',
@@ -377,6 +377,8 @@ class Astra(BaseTorchClassModel):
             optimizer, scheduler = self._init_optimizer_and_lr_scheduler(model.backbone, config)
 
             pseudo_probas_u = self.collect_pseudodataset_teacher(unlabeled_dataset)
+            if not soft_labels:
+                pseudo_probas_u = torch.argmax(pseudo_probas_u, dim=-1)
 
             history_train_student = {}
             with trange(n_steps, desc=f"[TRAIN@{i}] ASTRA-student", unit="steps", disable=not verbose, ncols=150, position=0, leave=True) as pbar:

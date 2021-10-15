@@ -68,7 +68,7 @@ class MLP(BackBone):
     def __init__(self, n_class, input_size, n_hidden_layers=1, hidden_size=100, dropout=0.0, binary_mode=False, **kwargs):
         super(MLP, self).__init__(n_class=n_class, binary_mode=binary_mode)
         layers = [nn.Linear(input_size, hidden_size), nn.ReLU(), nn.Dropout(p=dropout)]
-        for i in range(n_hidden_layers-1):
+        for i in range(n_hidden_layers - 1):
             layers.extend([nn.Linear(hidden_size, hidden_size), nn.ReLU(), nn.Dropout(p=dropout)])
         self.fcs = nn.Sequential(*layers)
         self.last_layer = nn.Linear(hidden_size, self.n_class)

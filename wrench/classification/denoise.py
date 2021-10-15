@@ -22,13 +22,16 @@ class AttentionModel(nn.Module):
     def __init__(self, input_size, n_rules, hidden_size, n_class):
         super(AttentionModel, self).__init__()
         self.n_class = n_class
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, n_rules)
+        self.encoder = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.Tanh(),
+            nn.Linear(hidden_size, n_rules)
+        )
 
     def forward(self, x_lf, batch):
         x_l = batch['features'].to(x_lf.device)
         x = torch.cat((x_lf, x_l), 1)
-        z = self.fc2(torch.tanh(self.fc1(x)))
+        z = self.encoder(x)
         score = F.softmax(z, dim=1)
         mask = (x_lf >= 0).float()
         coverage_score = score * mask
@@ -57,7 +60,7 @@ class AssembleModel(BackBone):
         for k in range(self.n_class):
             lf_y_u[:, k] = (fix_score.unsqueeze(0).repeat([x_lf_u.size(0), 1]) * (x_lf_u == k).float()).sum(dim=1)
         lf_y_u /= torch.sum(lf_y_u, dim=1).unsqueeze(1)
-        lf_y_u[lf_y_u != lf_y_u] = 0  # handle the 'nan' (divided by 0) problem
+        lf_y_u = torch.nan_to_num(lf_y_u)  # handle the 'nan' (divided by 0) problem
         lf_y_u = F.log_softmax(lf_y_u, dim=1).detach()
 
         return predict_l, predict_u, lf_y_l, lf_y_u, fix_score.detach()
@@ -312,7 +315,7 @@ class Denoise(BaseTorchClassModel):
                     max_prob_weak_labels = torch.max(prob_weak_labels, dim=-1)[0]
                     mask = torch.unsqueeze((max_prob_feature > max_prob_weak_labels).long(), dim=1)
 
-                    proba = mask * prob_feature + (1-mask) * prob_weak_labels
+                    proba = mask * prob_feature + (1 - mask) * prob_weak_labels
                 elif mode == 'feature':
                     output1 = model.backbone(batch)
                     proba = F.softmax(output1, dim=-1)
