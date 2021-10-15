@@ -124,6 +124,7 @@ The detailed documentation is coming soon.
 | BERT | End Model | [link](https://huggingface.co/models) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/bert_model.py#L23) |
 | COSINE | End Model | [link](https://arxiv.org/abs/2010.07835) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/cosine.py#L68) |
 | Denoise | Joint Model | [link](https://arxiv.org/abs/2010.04582) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/denoise.py#L72) |
+| WeaSEL | Joint Model | [link](https://arxiv.org/abs/2107.02233) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/weasel.py#L72) |
 
 ### sequence tagging:
 | Model | Model Type | Reference | Link to Wrench |
