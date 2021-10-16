@@ -110,6 +110,8 @@ The detailed documentation is coming soon.
 
 **If you find any of the implementations is wrong/problematic, don't hesitate to raise issue/pull request, we really appreciate it!**
 
+TODO-list: check [this](https://github.com/JieyuZ2/wrench/wiki/TODO-List) out! 
+
 ### classification:
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
