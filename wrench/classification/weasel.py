@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from typing import Any, Optional, Union, Callable
 
 import numpy as np
@@ -21,17 +22,27 @@ ABSTAIN = -1
 
 
 class Encoder(BackBone):
-    def __init__(self, input_size, n_rules, hidden_size, n_class, temperature, dropout=0.8):
+    def __init__(self, input_size, n_rules, hidden_size, n_class, temperature, dropout=0.3):
         super(Encoder, self).__init__(n_class=n_class)
         self.n_rules = n_rules
         self.acc_scaler = np.sqrt(n_rules) * n_class
         self.temperature = temperature
         self.encoder = nn.Sequential(
             nn.Linear(input_size + n_rules, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_size, hidden_size),
+            nn.BatchNorm1d(hidden_size),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_size, n_rules * n_class),
         )
+        self.log_class_prior = nn.Parameter(torch.log(torch.ones(n_class) / n_class), requires_grad=False)
+
+    def set_class_prior(self, p):
+        for i, pp in enumerate(p):
+            self.log_class_prior.data[i] = np.log(p[i])
 
     def forward(self, batch):
         device = self.get_device()
@@ -48,7 +59,7 @@ class Encoder(BackBone):
         one_hot = F.one_hot(weak_labels.long() * mask, num_classes=self.n_class)
         z = z * one_hot
 
-        logits = torch.sum(z, dim=1)
+        logits = torch.sum(z, dim=1) + self.log_class_prior
 
         return logits
 
@@ -71,7 +82,7 @@ class WeaSELModel(BackBone):
 
 class WeaSEL(BaseTorchClassModel):
     def __init__(self,
-                 temperature: Optional[float] = 0.6,
+                 temperature: Optional[float] = 1.0,
                  dropout: Optional[float] = 0.3,
                  hidden_size: Optional[int] = 100,
 
@@ -180,6 +191,15 @@ class WeaSEL(BaseTorchClassModel):
             return_features=True,
             return_weak_labels=True,
         )
+
+        if valid_flag:
+            y = np.array(dataset_valid.labels)
+            class_counts = Counter(y)
+            sorted_counts = np.zeros(n_class)
+            for c, cnt in class_counts.items():
+                sorted_counts[c] = cnt
+            balance = (sorted_counts + 1) / sum(sorted_counts)
+            model.encoder.set_class_prior(balance)
 
         history = {}
         last_step_log = {}
