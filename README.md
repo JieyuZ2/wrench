@@ -18,7 +18,7 @@
 **Wrench** is a **benchmark platform** containing diverse weak supervision tasks. It also provides a **common and easy framework** for development and evaluation of your own weak supervision models within the benchmark.
 
 For more information, checkout our publications: 
-- [WRENCH: A Comprehensive Benchmark for Weak Supervision](https://arxiv.org/abs/2109.11377) (arXiv 2021)
+- [WRENCH: A Comprehensive Benchmark for Weak Supervision](https://arxiv.org/abs/2109.11377) (NeurIPS 2021)
 
 If you find this repository helpful, feel free to cite our publication:
 
