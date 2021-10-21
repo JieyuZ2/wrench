@@ -11,7 +11,7 @@ from tqdm.auto import trange
 from ..backbone import BackBone
 from ..basemodel import BaseTorchClassModel
 from ..config import Config
-from ..dataset import sample_batch, BaseDataset
+from ..dataset import BaseDataset
 from ..dataset.utils import split_labeled_unlabeled
 from ..utils import cross_entropy_with_probs
 
@@ -245,10 +245,9 @@ class ImplyLoss(BaseTorchClassModel):
 
         labeled_train_dataloader = self._init_train_dataloader(
             labeled_dataset,
-            n_steps=0,
+            n_steps=n_steps,
             config=config
         )
-        labeled_train_dataloader = sample_batch(labeled_train_dataloader)
 
         optimizer, scheduler = self._init_optimizer_and_lr_scheduler(model, config)
 
@@ -262,13 +261,11 @@ class ImplyLoss(BaseTorchClassModel):
                 step = 0
                 model.train()
                 optimizer.zero_grad()
-                for unlabeled_batch in unlabeled_train_dataloader:
+                for unlabeled_batch, labeled_batch in zip(unlabeled_train_dataloader, labeled_train_dataloader):
 
                     loss_u = model.calculate_unlabeled_batch_loss(
                         unlabeled_batch,
                     )
-
-                    labeled_batch = next(labeled_train_dataloader)
 
                     loss_l = model.calculate_labeled_batch_loss(
                         labeled_batch,

@@ -284,9 +284,9 @@ class Astra(BaseTorchClassModel):
                 step = 0
                 model.train()
                 optimizer.zero_grad()
-                for unlabel_batch in unlabeled_dataloader:
-                    idx_u = unlabel_batch['ids'].long().to(device)
-                    predict_u = model.forward_teacher(unlabel_batch, features_u[idx_u], pseudo_probas_u[idx_u])
+                for unlabeled_batch in unlabeled_dataloader:
+                    idx_u = unlabeled_batch['ids'].long().to(device)
+                    predict_u = model.forward_teacher(unlabeled_batch, features_u[idx_u], pseudo_probas_u[idx_u])
                     loss = - torch.mean(torch.sum(predict_u * torch.log(predict_u), dim=-1))
                     loss.backward()
                     cnt += 1
@@ -386,8 +386,8 @@ class Astra(BaseTorchClassModel):
                 step = 0
                 model.train()
                 optimizer.zero_grad()
-                for unlabel_batch in unlabeled_dataloader:
-                    idx_u = unlabel_batch['ids'].long().to(device)
+                for unlabeled_batch in unlabeled_dataloader:
+                    idx_u = unlabeled_batch['ids'].long().to(device)
                     predict_u = model(batch)
                     loss = cross_entropy_with_probs(predict_u, pseudo_probas_u[idx_u])
                     loss.backward()
@@ -547,7 +547,7 @@ class Astra(BaseTorchClassModel):
         if isinstance(dataset, BaseDataset):
             valid_dataloader = self._init_valid_dataloader(
                 dataset,
-                return_weak_labels=True,
+                return_weak_labels=mode == 'teacher',
             )
         else:
             valid_dataloader = dataset

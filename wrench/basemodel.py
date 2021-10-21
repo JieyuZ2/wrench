@@ -345,6 +345,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                                return_features: Optional[bool] = False,
                                return_weak_labels: Optional[bool] = False,
                                return_labels: Optional[bool] = False,
+                               **kwargs: Any
                                ) -> DataLoader:
         hyperparas = config.hyperparas
         if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
@@ -358,10 +359,11 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                 return_weak_labels=return_weak_labels,
                 return_labels=return_labels,
             )
-            train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'], shuffle=True, collate_fn=construct_collate_fn_trunc_pad('mask'))
+            train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'],
+                                          shuffle=True, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
         else:
             torch_dataset = TorchDataset(dataset_train, n_data=n_steps * hyperparas['batch_size'])
-            train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'], shuffle=True)
+            train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'], shuffle=True, **kwargs)
         return train_dataloader
 
     def _init_valid_dataloader(self,
@@ -389,7 +391,8 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                          direction: Optional[str] = 'auto',
                          patience: Optional[int] = 20,
                          tolerance: Optional[float] = -1.0,
-                         **kwargs: Any):
+                         **kwargs: Any
+                         ):
 
         if dataset_valid is None:
             self.valid_flag = False

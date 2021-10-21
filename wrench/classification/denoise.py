@@ -12,7 +12,7 @@ from transformers import AutoTokenizer
 from ..backbone import BackBone
 from ..basemodel import BaseTorchClassModel, BaseLabelModel
 from ..config import Config
-from ..dataset import sample_batch, BaseDataset
+from ..dataset import BaseDataset
 from ..dataset.utils import split_labeled_unlabeled
 
 logger = logging.getLogger(__name__)
@@ -171,12 +171,11 @@ class Denoise(BaseTorchClassModel):
 
         unlabeled_dataloader = self._init_train_dataloader(
             unlabeled_dataset,
-            n_steps=0,
+            n_steps=n_steps,
             config=config,
             return_features=True,
             return_weak_labels=True,
         )
-        unlabeled_dataloader = sample_batch(unlabeled_dataloader)
 
         label_model = self._init_label_model(config)
         label_model.fit(dataset_train=dataset_train, dataset_valid=dataset_valid, verbose=verbose)
@@ -204,18 +203,17 @@ class Denoise(BaseTorchClassModel):
                 step = 0
                 model.train()
                 optimizer.zero_grad()
-                for labeled_batch in labeled_dataloader:
+                for labeled_batch, unlabeled_batch in zip(labeled_dataloader, unlabeled_dataloader):
 
-                    unlabel_batch = next(unlabeled_dataloader)
                     x_lf_l = labeled_batch['weak_labels'].to(device)
-                    x_lf_u = unlabel_batch['weak_labels'].to(device)
+                    x_lf_u = unlabeled_batch['weak_labels'].to(device)
                     idx_l = labeled_batch['ids'].long().to(device)
-                    idx_u = unlabel_batch['ids'].long().to(device)
+                    idx_u = unlabeled_batch['ids'].long().to(device)
                     y_l = all_y_l.index_select(0, idx_l)
                     Z = all_Z.index_select(0, idx_u)
                     z = all_z.index_select(0, idx_u)
 
-                    predict_l, predict_u, lf_y_l, lf_y_u, fix_score = model(labeled_batch, unlabel_batch, x_lf_l, x_lf_u)
+                    predict_l, predict_u, lf_y_l, lf_y_u, fix_score = model(labeled_batch, unlabeled_batch, x_lf_l, x_lf_u)
 
                     loss_sup = F.cross_entropy(predict_l, y_l)
                     loss_sup_weight = F.cross_entropy(lf_y_l, y_l)
