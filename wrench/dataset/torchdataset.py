@@ -104,7 +104,6 @@ class BERTTorchTextClassDataset(BERTTorchDataset):
         self.input_mask_tensor = input_mask_tensor
 
     def convert_corpus_to_tensor(self, corpus):
-
         outputs = self.tokenizer(corpus, return_token_type_ids=False, return_attention_mask=True, padding=True,
                                  return_tensors='pt', max_length=self.max_seq_length, truncation=True)
         input_ids_tensor = outputs['input_ids']

@@ -2,7 +2,6 @@ import copy
 import logging
 from typing import Any, Optional, Union, Callable, List
 
-from snorkel.utils import probs_to_preds
 import numpy as np
 import torch
 import torch.nn as nn
