@@ -1,4 +1,5 @@
 import math
+from abc import abstractmethod
 from typing import Optional
 
 import numpy as np
@@ -43,7 +44,7 @@ class TorchDataset(Dataset):
         return d
 
 
-class BERTTorchTextClassDataset(TorchDataset):
+class BERTTorchDataset(TorchDataset):
     def __init__(self,
                  dataset: BaseDataset,
                  tokenizer,
@@ -51,14 +52,51 @@ class BERTTorchTextClassDataset(TorchDataset):
                  n_data: Optional[int] = 0,
                  return_features: Optional[bool] = False,
                  return_weak_labels: Optional[bool] = False,
+                 return_labels: Optional[bool] = False,
                  ):
-        super(BERTTorchTextClassDataset, self).__init__(dataset, n_data)
+        super(BERTTorchDataset, self).__init__(dataset, n_data)
         self.return_features = return_features
         self.return_weak_labels = return_weak_labels
+        self.return_labels = return_labels
 
         self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
 
+    def __getitem__(self, idx):
+        idx = idx % self.n_data_
+        d = self.getitem_(idx)
+        if self.return_features:
+            d['features'] = self.features[idx]
+        if self.return_weak_labels:
+            d['weak_labels'] = self.weak_labels[idx]
+        if self.return_labels:
+            d['labels'] = self.labels[idx]
+        return d
+
+    @abstractmethod
+    def getitem_(self, idx):
+        raise NotImplementedError
+
+
+class BERTTorchTextClassDataset(BERTTorchDataset):
+    def __init__(self,
+                 dataset: BaseDataset,
+                 tokenizer,
+                 max_seq_length: Optional[int] = 512,
+                 n_data: Optional[int] = 0,
+                 return_features: Optional[bool] = False,
+                 return_weak_labels: Optional[bool] = False,
+                 return_labels: Optional[bool] = False,
+                 ):
+        super(BERTTorchTextClassDataset, self).__init__(
+            dataset,
+            tokenizer,
+            max_seq_length,
+            n_data,
+            return_features,
+            return_weak_labels,
+            return_labels,
+        )
         corpus = list(map(lambda x: x["text"], dataset.examples))
         input_ids_tensor, input_mask_tensor = self.convert_corpus_to_tensor(corpus)
 
@@ -80,21 +118,16 @@ class BERTTorchTextClassDataset(TorchDataset):
 
         return input_ids_tensor, input_mask_tensor
 
-    def __getitem__(self, idx):
-        idx = idx % self.n_data_
+    def getitem_(self, idx):
         d = {
             'ids'      : idx,
             'input_ids': self.input_ids_tensor[idx],
             'mask'     : self.input_mask_tensor[idx],
         }
-        if self.return_features:
-            d['features'] = self.features[idx]
-        if self.return_weak_labels:
-            d['weak_labels'] = self.weak_labels[idx]
         return d
 
 
-class BERTTorchRelationClassDataset(TorchDataset):
+class BERTTorchRelationClassDataset(BERTTorchDataset):
     def __init__(self,
                  dataset: BaseDataset,
                  tokenizer,
@@ -102,14 +135,17 @@ class BERTTorchRelationClassDataset(TorchDataset):
                  n_data: Optional[int] = 0,
                  return_features: Optional[bool] = False,
                  return_weak_labels: Optional[bool] = False,
+                 return_labels: Optional[bool] = False,
                  ):
-        super(BERTTorchRelationClassDataset, self).__init__(dataset, n_data)
-        self.return_features = return_features
-        self.return_weak_labels = return_weak_labels
-
-        self.tokenizer = tokenizer
-        self.max_seq_length = max_seq_length
-
+        super(BERTTorchRelationClassDataset, self).__init__(
+            dataset,
+            tokenizer,
+            max_seq_length,
+            n_data,
+            return_features,
+            return_weak_labels,
+            return_labels,
+        )
         input_ids_tensor, input_mask_tensor, e1_mask_tensor, e2_mask_tensor = self.convert_corpus_to_tensor(dataset.examples)
 
         self.input_ids_tensor = input_ids_tensor
@@ -202,8 +238,7 @@ class BERTTorchRelationClassDataset(TorchDataset):
         input_mask = (input_ids != self.tokenizer.pad_token_id).long()
         return input_ids, input_mask, e1_mask, e2_mask
 
-    def __getitem__(self, idx):
-        idx = idx % self.n_data_
+    def getitem_(self, idx):
         d = {
             'ids'      : idx,
             'input_ids': self.input_ids_tensor[idx],
@@ -211,8 +246,4 @@ class BERTTorchRelationClassDataset(TorchDataset):
             'e1_mask'  : self.e1_mask_tensor[idx],
             'e2_mask'  : self.e2_mask_tensor[idx],
         }
-        if self.return_features:
-            d['features'] = self.features[idx]
-        if self.return_weak_labels:
-            d['weak_labels'] = self.weak_labels[idx]
         return d

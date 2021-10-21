@@ -2,6 +2,7 @@ import copy
 import logging
 from typing import Any, Optional, Union, Callable, List
 
+from snorkel.utils import probs_to_preds
 import numpy as np
 import torch
 import torch.nn as nn
@@ -181,6 +182,7 @@ class Astra(BaseTorchClassModel):
             n_steps=n_steps,
             config=config,
             return_weak_labels=True,
+            return_labels=True,
         )
 
         unlabeled_dataloader = self._init_train_dataloader(
