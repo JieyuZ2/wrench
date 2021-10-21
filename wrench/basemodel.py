@@ -422,26 +422,26 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
         probas = self.predict_proba(self.valid_dataloader, **kwargs)
         return self.metric_fn(self.y_valid, probas)
 
+    @torch.no_grad()
     def predict_proba(self, dataset: Union[BaseDataset, DataLoader], device: Optional[torch.device] = None, **kwargs: Any):
         if device is not None:
             model = self.model.to(device)
         else:
             model = self.model
         model.eval()
-        with torch.no_grad():
-            if isinstance(dataset, BaseDataset):
-                valid_dataloader = self._init_valid_dataloader(dataset)
+        if isinstance(dataset, BaseDataset):
+            valid_dataloader = self._init_valid_dataloader(dataset)
+        else:
+            valid_dataloader = dataset
+        probas = []
+        for batch in valid_dataloader:
+            output = model(batch)
+            if output.shape[1] == 1:
+                output = torch.sigmoid(output)
+                proba = torch.cat([1 - output, output], -1)
             else:
-                valid_dataloader = dataset
-            probas = []
-            for batch in valid_dataloader:
-                output = model(batch)
-                if output.shape[1] == 1:
-                    output = torch.sigmoid(output)
-                    proba = torch.cat([1 - output, output], -1)
-                else:
-                    proba = F.softmax(output, dim=-1)
-                probas.append(proba.cpu().detach().numpy())
+                proba = F.softmax(output, dim=-1)
+            probas.append(proba.cpu().detach().numpy())
 
         return np.vstack(probas)
 
@@ -500,23 +500,23 @@ class BaseTorchSeqModel(BaseSeqModel, BaseTorchModel, ABC):
         preds = self.predict(self.valid_dataloader, **kwargs)
         return self.metric_fn(self.y_valid, preds)
 
+    @torch.no_grad()
     def predict(self, dataset: Union[BaseSeqDataset, DataLoader], device: Optional[torch.device] = None, **kwargs: Any):
         if device is not None:
             model = self.model.to(device)
         else:
             model = self.model
         model.eval()
-        with torch.no_grad():
-            if isinstance(dataset, BaseSeqDataset):
-                O_id = dataset.label2id['O']
-                valid_dataloader = self._init_valid_dataloader(dataset)
-            else:
-                O_id = dataset.dataset.label2id['O']
-                valid_dataloader = dataset
-            preds = []
-            for batch in valid_dataloader:
-                tag_seq = model(batch)
-                preds.extend(tag_seq)
+        if isinstance(dataset, BaseSeqDataset):
+            O_id = dataset.label2id['O']
+            valid_dataloader = self._init_valid_dataloader(dataset)
+        else:
+            O_id = dataset.dataset.label2id['O']
+            valid_dataloader = dataset
+        preds = []
+        for batch in valid_dataloader:
+            tag_seq = model(batch)
+            preds.extend(tag_seq)
 
         for i, sl in enumerate(valid_dataloader.dataset.seq_len):
             n = len(preds[i])

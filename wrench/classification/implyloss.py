@@ -317,6 +317,7 @@ class ImplyLoss(BaseTorchClassModel):
 
         return history
 
+    @torch.no_grad()
     def predict_proba(self, dataset: Union[BaseDataset, DataLoader], mode: Optional[str] = 'implyloss',
                       device: Optional[torch.device] = None, **kwargs: Any):
         assert mode in ['classifier', 'implyloss'], f'mode: {mode} not support!'
@@ -325,21 +326,20 @@ class ImplyLoss(BaseTorchClassModel):
         else:
             model = self.model
         model.eval()
-        with torch.no_grad():
-            if isinstance(dataset, BaseDataset):
-                valid_dataloader = self._init_valid_dataloader(dataset)
+        if isinstance(dataset, BaseDataset):
+            valid_dataloader = self._init_valid_dataloader(dataset)
+        else:
+            valid_dataloader = dataset
+        probas = []
+        for batch in valid_dataloader:
+            if mode == 'classifier':
+                logits = model.backbone(batch)
+                proba = torch.softmax(logits, dim=-1)
+            elif mode == 'implyloss':
+                proba = torch.softmax(model(batch), dim=-1)
             else:
-                valid_dataloader = dataset
-            probas = []
-            for batch in valid_dataloader:
-                if mode == 'classifier':
-                    logits = model.backbone(batch)
-                    proba = torch.softmax(logits, dim=-1)
-                elif mode == 'implyloss':
-                    proba = torch.softmax(model(batch), dim=-1)
-                else:
-                    raise NotImplementedError
+                raise NotImplementedError
 
-                probas.append(proba.cpu().numpy())
+            probas.append(proba.cpu().numpy())
 
         return np.vstack(probas)

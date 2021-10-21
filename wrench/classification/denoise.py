@@ -284,6 +284,7 @@ class Denoise(BaseTorchClassModel):
 
         return history
 
+    @torch.no_grad()
     def predict_proba(self, dataset: Union[BaseDataset, DataLoader], mode: Optional[str] = 'feature',
                       device: Optional[torch.device] = None, **kwargs: Any):
         assert mode in ['ensemble', 'feature', 'rules'], f'mode: {mode} not support!'
@@ -293,40 +294,39 @@ class Denoise(BaseTorchClassModel):
             model = self.model
             device = model.get_device()
         model.eval()
-        with torch.no_grad():
-            if isinstance(dataset, BaseDataset):
-                valid_dataloader = self._init_valid_dataloader(
-                    dataset,
-                    return_features=True,
-                    return_weak_labels=True,
-                )
+        if isinstance(dataset, BaseDataset):
+            valid_dataloader = self._init_valid_dataloader(
+                dataset,
+                return_features=True,
+                return_weak_labels=True,
+            )
+        else:
+            valid_dataloader = dataset
+        probas = []
+        for batch in valid_dataloader:
+            if mode == 'ensemble':
+                output1, x = model.backbone(batch, return_features=True)
+                prob_feature = F.softmax(output1, dim=-1)
+                x_lf = batch['weak_labels'].to(device)
+                output2, _ = model.attention(x_lf, batch)
+                prob_weak_labels = F.softmax(output2, dim=-1)
+
+                max_prob_feature = torch.max(prob_feature, dim=-1)[0]
+                max_prob_weak_labels = torch.max(prob_weak_labels, dim=-1)[0]
+                mask = torch.unsqueeze((max_prob_feature > max_prob_weak_labels).long(), dim=1)
+
+                proba = mask * prob_feature + (1 - mask) * prob_weak_labels
+            elif mode == 'feature':
+                output1 = model.backbone(batch)
+                proba = F.softmax(output1, dim=-1)
+            elif mode == 'rules':
+                _, x = model.backbone(batch, return_features=True)
+                x_lf = batch['weak_labels'].to(device)
+                output2, _ = model.attention(x_lf, x)
+                proba = F.softmax(output2, dim=-1)
             else:
-                valid_dataloader = dataset
-            probas = []
-            for batch in valid_dataloader:
-                if mode == 'ensemble':
-                    output1, x = model.backbone(batch, return_features=True)
-                    prob_feature = F.softmax(output1, dim=-1)
-                    x_lf = batch['weak_labels'].to(device)
-                    output2, _ = model.attention(x_lf, batch)
-                    prob_weak_labels = F.softmax(output2, dim=-1)
+                raise NotImplementedError
 
-                    max_prob_feature = torch.max(prob_feature, dim=-1)[0]
-                    max_prob_weak_labels = torch.max(prob_weak_labels, dim=-1)[0]
-                    mask = torch.unsqueeze((max_prob_feature > max_prob_weak_labels).long(), dim=1)
-
-                    proba = mask * prob_feature + (1 - mask) * prob_weak_labels
-                elif mode == 'feature':
-                    output1 = model.backbone(batch)
-                    proba = F.softmax(output1, dim=-1)
-                elif mode == 'rules':
-                    _, x = model.backbone(batch, return_features=True)
-                    x_lf = batch['weak_labels'].to(device)
-                    output2, _ = model.attention(x_lf, x)
-                    proba = F.softmax(output2, dim=-1)
-                else:
-                    raise NotImplementedError
-
-                probas.append(proba.cpu().numpy())
+            probas.append(proba.cpu().numpy())
 
         return np.vstack(probas)

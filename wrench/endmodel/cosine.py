@@ -326,28 +326,28 @@ class Cosine(BaseTorchClassModel):
         history['selftrain'] = history_selftrain
         return history
 
+    @torch.no_grad()
     def _get_new_dataset(self, dataset, n, thresh):
         self.model.eval()
         dataloader = self._init_valid_dataloader(dataset)
         model = self.model
         idx, y_pseudo = [], []
         constant = np.log(len(dataset.id2label))
-        with torch.no_grad():
-            for batch in dataloader:
-                output = model(batch)
-                if output.shape[1] == 1:
-                    output = torch.sigmoid(output)
-                    proba = torch.cat([1 - output, output], -1)
-                else:
-                    proba = F.softmax(output, dim=-1)
-                weight = torch.sum(-torch.log(proba + 1e-5) * proba, dim=1)
-                weight = 1 - weight / constant
-                mask = weight > thresh
+        for batch in dataloader:
+            output = model(batch)
+            if output.shape[1] == 1:
+                output = torch.sigmoid(output)
+                proba = torch.cat([1 - output, output], -1)
+            else:
+                proba = F.softmax(output, dim=-1)
+            weight = torch.sum(-torch.log(proba + 1e-5) * proba, dim=1)
+            weight = 1 - weight / constant
+            mask = weight > thresh
 
-                idx += batch['ids'][mask].tolist()
-                y_pseudo.append((proba[mask, :]).cpu())
-                if len(idx) > n:
-                    break
+            idx += batch['ids'][mask].tolist()
+            y_pseudo.append((proba[mask, :]).cpu())
+            if len(idx) > n:
+                break
         if len(idx) == 0:
             return None, None
         sub_dataset = dataset.create_subset(idx)

@@ -198,7 +198,6 @@ class Astra(BaseTorchClassModel):
             direction,
             patience,
             tolerance,
-            return_features=True,
             return_weak_labels=True,
         )
 
@@ -499,42 +498,44 @@ class Astra(BaseTorchClassModel):
         history['train'] = history_train
         return history
 
+    @torch.no_grad()
     def collect_pseudodataset_student(self, dataset):
         model = self.model
         model.eval()
-        with torch.no_grad():
-            if isinstance(dataset, BaseDataset):
-                valid_dataloader = self._init_valid_dataloader(
-                    dataset,
-                )
-            else:
-                valid_dataloader = dataset
-            features, probas = [], []
-            for batch in valid_dataloader:
-                output, feature = model(batch, return_features=True)
-                proba = F.softmax(output, dim=-1)
-                probas.append(proba)
-                features.append(feature)
+        if isinstance(dataset, BaseDataset):
+            valid_dataloader = self._init_valid_dataloader(
+                dataset,
+            )
+        else:
+            valid_dataloader = dataset
+        features, probas = [], []
+        for batch in valid_dataloader:
+            output, feature = model(batch, return_features=True)
+            proba = F.softmax(output, dim=-1)
+            probas.append(proba)
+            features.append(feature)
 
         return torch.vstack(probas), torch.vstack(features)
 
+    @torch.no_grad()
     def collect_pseudodataset_teacher(self, dataset):
         model = self.model
         model.eval()
-        with torch.no_grad():
-            if isinstance(dataset, BaseDataset):
-                valid_dataloader = self._init_valid_dataloader(
-                    dataset,
-                )
-            else:
-                valid_dataloader = dataset
-            probas = []
-            for batch in valid_dataloader:
-                proba = model.forward_teacher(batch)
-                probas.append(proba)
+        if isinstance(dataset, BaseDataset):
+            valid_dataloader = self._init_valid_dataloader(
+                dataset,
+                return_weak_labels=True,
+            )
+        else:
+            valid_dataloader = dataset
+        probas = []
+        for batch in valid_dataloader:
+            proba = model.forward_teacher(batch)
+            probas.append(proba)
 
         return torch.vstack(probas)
 
+    @torch.no_grad()
     def predict_proba(self, dataset: Union[BaseDataset, DataLoader], mode: Optional[str] = 'student',
                       device: Optional[torch.device] = None, **kwargs: Any):
         assert mode in ['teacher', 'student'], f'mode: {mode} not support!'
@@ -543,24 +544,23 @@ class Astra(BaseTorchClassModel):
         else:
             model = self.model
         model.eval()
-        with torch.no_grad():
-            if isinstance(dataset, BaseDataset):
-                valid_dataloader = self._init_valid_dataloader(
-                    dataset,
-                    return_weak_labels=True,
-                )
+        if isinstance(dataset, BaseDataset):
+            valid_dataloader = self._init_valid_dataloader(
+                dataset,
+                return_weak_labels=True,
+            )
+        else:
+            valid_dataloader = dataset
+        probas = []
+        for batch in valid_dataloader:
+            if mode == 'teacher':
+                proba = model.forward_teacher(batch)
+            elif mode == 'student':
+                output = model(batch)
+                proba = F.softmax(output, dim=-1)
             else:
-                valid_dataloader = dataset
-            probas = []
-            for batch in valid_dataloader:
-                if mode == 'teacher':
-                    proba = model.forward_teacher(batch)
-                elif mode == 'student':
-                    output = model(batch)
-                    proba = F.softmax(output, dim=-1)
-                else:
-                    raise NotImplementedError
+                raise NotImplementedError
 
-                probas.append(proba.cpu().numpy())
+            probas.append(proba.cpu().numpy())
 
         return np.vstack(probas)
