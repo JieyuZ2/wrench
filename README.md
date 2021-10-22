@@ -150,6 +150,12 @@ Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrenc
 | Meta-Weight-Net | End Model | [link](https://arxiv.org/abs/1902.07379) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/meta_weight_net.py#L34) |
 | Learning2ReWeight | End Model | [link](https://arxiv.org/abs/1803.09050) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/learn_to_reweight.py#L20) |
 
+#### Semi-Supervised Learning methods as end model:
+
+| Model | Model Type | Reference | Link to Wrench |
+|:--------|:---------|:------|:------|
+| MeanTeacher | End Model | [link](https://arxiv.org/abs/1703.01780) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/semisupervisedlearning/meanteacher.py#L61) |
+
 #### Weak Supervision with cleaned labels (Semi-Weak Supervision):
 
 | Model | Model Type | Reference | Link to Wrench |
