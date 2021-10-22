@@ -10,10 +10,12 @@ import torch
 import torch.nn.functional as F
 from snorkel.utils import probs_to_preds
 from torch import optim, nn
+from torch.cuda.amp import autocast
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup
 
+from . import get_amp_flag, get_num_workers, get_pin_memory
 from . import backbone
 from .backbone import BackBone, BERTBackBone
 from .config import Config
@@ -94,7 +96,7 @@ class BaseTorchModel(BaseModel, ABC):
         optimizer = config.optimizer_config['name']
         optimizer_config = config.optimizer_config['paras']
         if optimizer == 'default':
-            optimizer_ = AdamW(parameters, lr=optimizer_config['lr'], weight_decay=optimizer_config['weight_decay'])
+            optimizer_ = AdamW(parameters, lr=optimizer_config['lr'], weight_decay=optimizer_config.get('weight_decay', 0.0))
         else:
             optimizer_ = getattr(optim, optimizer)(parameters, **optimizer_config)
         if hasattr(config, 'lr_scheduler_config'):
@@ -338,6 +340,38 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
         label_model_ = getattr(labelmodel, label_model)(**label_model_config)
         return label_model_
 
+    def _init_dataloader(self,
+                         dataset: BaseDataset,
+                         n_steps: int,
+                         max_tokens: int,
+                         batch_size: int,
+                         real_batch_size: int,
+                         return_features: Optional[bool] = False,
+                         return_weak_labels: Optional[bool] = False,
+                         return_labels: Optional[bool] = False,
+                         **kwargs: Any
+                         ) -> DataLoader:
+        if 'num_workers' not in kwargs:
+            kwargs['num_workers'] = get_num_workers()
+        if 'pin_memory' not in kwargs:
+            kwargs['pin_memory'] = get_pin_memory()
+        if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
+            torch_dataset = get_bert_torch_dataset_class(dataset)(
+                dataset,
+                self.tokenizer,
+                max_tokens,
+                n_data=n_steps * batch_size,
+                return_features=return_features,
+                return_weak_labels=return_weak_labels,
+                return_labels=return_labels,
+            )
+            dataloader = DataLoader(torch_dataset, batch_size=real_batch_size,
+                                    shuffle=True, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
+        else:
+            torch_dataset = TorchDataset(dataset, n_data=n_steps * batch_size)
+            dataloader = DataLoader(torch_dataset, batch_size=real_batch_size, shuffle=True, **kwargs)
+        return dataloader
+
     def _init_train_dataloader(self,
                                dataset_train: BaseDataset,
                                n_steps: int,
@@ -350,39 +384,37 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
         hyperparas = config.hyperparas
         if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
             max_tokens = config.backbone_config['paras']['max_tokens']
-            torch_dataset = get_bert_torch_dataset_class(dataset_train)(
-                dataset_train,
-                self.tokenizer,
-                max_tokens,
-                n_data=n_steps * hyperparas['batch_size'],
-                return_features=return_features,
-                return_weak_labels=return_weak_labels,
-                return_labels=return_labels,
-            )
-            train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'],
-                                          shuffle=True, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
         else:
-            torch_dataset = TorchDataset(dataset_train, n_data=n_steps * hyperparas['batch_size'])
-            train_dataloader = DataLoader(torch_dataset, batch_size=hyperparas['real_batch_size'], shuffle=True, **kwargs)
-        return train_dataloader
+            max_tokens = -1
+        return self._init_dataloader(
+            dataset_train,
+            n_steps,
+            max_tokens,
+            hyperparas['batch_size'],
+            hyperparas['real_batch_size'],
+            return_features,
+            return_weak_labels,
+            return_labels,
+            **kwargs
+        )
 
     def _init_valid_dataloader(self,
                                dataset_valid: BaseDataset,
                                return_features: Optional[bool] = False,
                                return_weak_labels: Optional[bool] = False,
+                               **kwargs: Any
                                ) -> DataLoader:
-        if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
-            torch_dataset = get_bert_torch_dataset_class(dataset_valid)(
-                dataset_valid,
-                self.tokenizer,
-                512,
-                return_features=return_features,
-                return_weak_labels=return_weak_labels,
-            )
-            valid_dataloader = DataLoader(torch_dataset, batch_size=self.hyperparas['test_batch_size'], shuffle=False, collate_fn=construct_collate_fn_trunc_pad('mask'))
-            return valid_dataloader
-        else:
-            return DataLoader(TorchDataset(dataset_valid), batch_size=self.hyperparas['test_batch_size'], shuffle=False)
+        return self._init_dataloader(
+            dataset_valid,
+            0,
+            512,
+            self.hyperparas['test_batch_size'],
+            self.hyperparas['test_batch_size'],
+            return_features,
+            return_weak_labels,
+            return_labels=False,
+            **kwargs
+        )
 
     def _init_valid_step(self,
                          dataset_valid: Optional[BaseDataset] = None,
@@ -422,7 +454,8 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
         return True
 
     def _calc_valid_metric(self, **kwargs):
-        probas = self.predict_proba(self.valid_dataloader, **kwargs)
+        with autocast(enabled=get_amp_flag()):
+            probas = self.predict_proba(self.valid_dataloader, **kwargs)
         return self.metric_fn(self.y_valid, probas)
 
     @torch.no_grad()
@@ -500,7 +533,8 @@ class BaseTorchSeqModel(BaseSeqModel, BaseTorchModel, ABC):
         return True
 
     def _calc_valid_metric(self, **kwargs):
-        preds = self.predict(self.valid_dataloader, **kwargs)
+        with autocast(enabled=get_amp_flag()):
+            preds = self.predict(self.valid_dataloader, **kwargs)
         return self.metric_fn(self.y_valid, preds)
 
     @torch.no_grad()

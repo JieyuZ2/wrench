@@ -128,7 +128,6 @@ class WeaSEL(BaseTorchClassModel):
             dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
             cut_tied: Optional[bool] = False,
-            valid_mode: Optional[str] = 'feature',
             evaluation_step: Optional[int] = 100,
             metric: Optional[Union[str, Callable]] = 'acc',
             direction: Optional[str] = 'auto',
@@ -225,7 +224,7 @@ class WeaSEL(BaseTorchClassModel):
                         step += 1
 
                         if valid_flag and step % evaluation_step == 0:
-                            metric_value, early_stop_flag, info = self._valid_step(step, mode=valid_mode)
+                            metric_value, early_stop_flag, info = self._valid_step(step)
                             if early_stop_flag:
                                 logger.info(info)
                                 break
