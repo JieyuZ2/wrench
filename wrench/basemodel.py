@@ -367,7 +367,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                 return_labels=return_labels,
             )
             dataloader = DataLoader(torch_dataset, batch_size=real_batch_size,
-                                    shuffle=True, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
+                                    shuffle=shuffle, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
         else:
             torch_dataset = TorchDataset(dataset, n_data=n_steps * batch_size)
             dataloader = DataLoader(torch_dataset, batch_size=real_batch_size, shuffle=shuffle, **kwargs)
