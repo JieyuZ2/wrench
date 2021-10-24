@@ -93,7 +93,7 @@ def single_process(item, model, dataset_train, y_train, dataset_valid, y_valid, 
     kwargs = kwargs.copy()
     m = deepcopy(model)
     m.fit(dataset_train=dataset_train, y_train=y_train, dataset_valid=dataset_valid, y_valid=y_valid,
-          verbose=False, metric=metric, direction=direction, **suggestions, **kwargs)
+          verbose=True, metric=metric, direction=direction, **suggestions, **kwargs)
     value = m.test(dataset_valid, metric_fn=metric)
     return value
 
@@ -139,6 +139,7 @@ def grid_search(model: BaseModel,
                 study_patience: Optional[Union[int, float]] = -1,
                 prune_threshold: Optional[float] = -1,
                 trial_timeout: Optional[int] = -1,
+                study_timeout: Optional[int] = None,
                 parallel: Optional[bool] = False,
                 study_name: Optional[str] = None,
                 **kwargs: Any):
@@ -156,7 +157,7 @@ def grid_search(model: BaseModel,
     study = optuna.create_study(
         study_name=study_name,
         sampler=RandomGridSampler(search_space, filter_fn=filter_fn),
-        direction=direction
+        direction=direction,
     )
 
     n_grids = len(study.sampler._all_grids)
@@ -182,7 +183,7 @@ def grid_search(model: BaseModel,
             value = metric_value / n_repeats
             return value
 
-        study.optimize(parallel_objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,), callbacks=callbacks)
+        study.optimize(parallel_objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,), callbacks=callbacks, timeout=study_timeout)
 
     else:
 
@@ -202,7 +203,7 @@ def grid_search(model: BaseModel,
             except KeyboardInterrupt:
                 raise Exception('[KeyboardInterrupt] may due to timeout')
 
-        study.optimize(objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,), callbacks=callbacks)
+        study.optimize(objective, n_trials=n_trials, n_jobs=n_jobs, catch=(Exception,), callbacks=callbacks, timeout=study_timeout)
 
     logger.info(f'[END: BEST VAL / PARAMS] Best value: {study.best_value}, Best paras: {study.best_params}')
     return study.best_params

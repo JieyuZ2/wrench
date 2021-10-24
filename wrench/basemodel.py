@@ -346,6 +346,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                          max_tokens: int,
                          batch_size: int,
                          real_batch_size: int,
+                         shuffle: bool,
                          return_features: Optional[bool] = False,
                          return_weak_labels: Optional[bool] = False,
                          return_labels: Optional[bool] = False,
@@ -369,7 +370,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                                     shuffle=True, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
         else:
             torch_dataset = TorchDataset(dataset, n_data=n_steps * batch_size)
-            dataloader = DataLoader(torch_dataset, batch_size=real_batch_size, shuffle=True, **kwargs)
+            dataloader = DataLoader(torch_dataset, batch_size=real_batch_size, shuffle=shuffle, **kwargs)
         return dataloader
 
     def _init_train_dataloader(self,
@@ -392,6 +393,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
             max_tokens,
             hyperparas['batch_size'],
             hyperparas['real_batch_size'],
+            True,
             return_features,
             return_weak_labels,
             return_labels,
@@ -410,6 +412,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
             512,
             self.hyperparas['test_batch_size'],
             self.hyperparas['test_batch_size'],
+            False,
             return_features,
             return_weak_labels,
             return_labels=False,
