@@ -13,6 +13,13 @@
 [![Arxiv](https://img.shields.io/badge/ArXiv-2109.11377-orange.svg)](https://arxiv.org/abs/2109.11377) 
 
 
+## 🔧 New
+
+**10/15/21** 
+
+1. A branch of new methods: WeaSEL, ImplyLoss, ASTRA, MeanTeacher, Meta-Weight-Net, Learning-to-Reweight
+2. Support image classification (dataset class / torchvision backbone) as well as DomainNet dataset (check out the [instruction](https://github.com/JieyuZ2/wrench/tree/main/datasets/domainnet) and the [paper](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf))
+
 ## 🔧 What is it?
 
 **Wrench** is a **benchmark platform** containing diverse weak supervision tasks. It also provides a **common and easy framework** for development and evaluation of your own weak supervision models within the benchmark.
