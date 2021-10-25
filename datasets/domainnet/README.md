@@ -1,5 +1,7 @@
 
-## 
+## Using DomainNet Dataset to Construct Weak Supervision Tasks
+
+The overall procedure is based on this [paper](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf)
 
 [1] Download the [DomainNet](http://ai.bu.edu/M3SDA/) datasets and unzip the 6 datasets under this folder: 
 
