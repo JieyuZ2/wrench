@@ -20,7 +20,7 @@ class BaseDataset(ABC):
     """Abstract data class."""
 
     def __init__(self,
-                 path: Union[str, Path] = None,
+                 path: str = None,
                  split: Optional[str] = None,
                  feature_cache_name: Optional[str] = None,
                  **kwargs: Any) -> None:
@@ -42,7 +42,7 @@ class BaseDataset(ABC):
     def __len__(self):
         return len(self.ids)
 
-    def load(self, path: Union[str, Path], split: str):
+    def load(self, path: str, split: str):
         """Method for loading data given the split.
 
         Parameters
@@ -75,7 +75,7 @@ class BaseDataset(ABC):
 
         return self
 
-    def load_labeled_ids_and_lf_exemplars(self, path: Union[str, Path]):
+    def load_labeled_ids_and_lf_exemplars(self, path: str):
 
         path = Path(path)
 
@@ -224,17 +224,21 @@ class BaseDataset(ABC):
         summary_d['overall_coverage'] = (1 - uncovered_rate)
 
         lf_summary = LFAnalysis(L=L).lf_summary(Y=Y)
-        summary_d['lf_avr_coverage'] = lf_summary['Coverage'].mean()
-        summary_d['lf_avr_overlap'] = lf_summary['Overlaps'].mean()
-        summary_d['lf_avr_conflict'] = lf_summary['Conflicts'].mean()
         summary_d['lf_avr_acc'] = lf_summary['Emp. Acc.'].mean()
+        summary_d['lf_var_acc'] = lf_summary['Emp. Acc.'].var()
+        summary_d['lf_avr_propensity'] = lf_summary['Coverage'].mean()
+        summary_d['lf_var_propensity'] = lf_summary['Coverage'].var()
+        summary_d['lf_avr_overlap'] = lf_summary['Overlaps'].mean()
+        summary_d['lf_var_overlap'] = lf_summary['Overlaps'].var()
+        summary_d['lf_avr_conflict'] = lf_summary['Conflicts'].mean()
+        summary_d['lf_var_conflict'] = lf_summary['Conflicts'].var()
 
         # calc cmi
         from ..utils import calc_cmi_matrix, cluster_based_accuracy_variance
         cmi_matrix = calc_cmi_matrix(Y, L)
         lf_cmi = np.ma.masked_invalid(cmi_matrix).mean(1).data
-        summary_d['lf_avr_cmi'] = lf_cmi.mean()
-        lf_summary['Avr. CMI'] = pd.Series(lf_cmi)
+        summary_d['correlation'] = lf_cmi.mean()
+        lf_summary['correlation'] = pd.Series(lf_cmi)
 
         # calc data dependency
         if hasattr(self, 'features') and features is None:
@@ -243,8 +247,8 @@ class BaseDataset(ABC):
             kmeans = KMeans(n_clusters=n_clusters).fit(features)
             cluster_labels = kmeans.labels_
             acc_var = np.array([cluster_based_accuracy_variance(Y, L[:, i], cluster_labels) for i in range(self.n_lf)])
-            summary_d['lf_avr_acc_var'] = acc_var.mean()
-            lf_summary['Acc. Var.'] = pd.Series(acc_var)
+            summary_d['data-dependency'] = acc_var.mean()
+            lf_summary['data-dependency'] = pd.Series(acc_var)
 
         if return_lf_summary:
             return summary_d, lf_summary

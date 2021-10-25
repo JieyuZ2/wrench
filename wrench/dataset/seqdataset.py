@@ -75,13 +75,7 @@ class BaseSeqDataset:
             data_dict = json.load(f)
 
         # Load meta if exist
-        meta_dir = path / 'meta.json'
-
-        if not meta_dir.is_file():
-            logger.error('Meta file does not exist!')
-            raise FileNotFoundError('Meta file does not exist!')
-
-        with open(meta_dir, 'r', encoding='utf-8') as f:
+        with open(path / 'meta.json', 'r', encoding='utf-8') as f:
             meta_dict = json.load(f)
 
         bio_labels = entity_to_bio_labels(meta_dict['entity_types'])

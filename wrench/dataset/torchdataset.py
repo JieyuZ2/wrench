@@ -4,9 +4,11 @@ from typing import Optional
 
 import numpy as np
 import torch
+import torchvision.transforms as transforms
 from torch.utils.data import Dataset
+from torchvision.datasets.folder import pil_loader
 
-from ..dataset import BaseDataset
+from ..dataset import BaseDataset, TextDataset, RelationDataset, ImageDataset
 
 
 def sample_batch(loader):
@@ -38,6 +40,36 @@ class TorchDataset(Dataset):
             'labels'     : self.labels[idx],
             'weak_labels': self.weak_labels[idx],
             'data'       : self.data[idx],
+        }
+        if self.features is not None:
+            d['features'] = self.features[idx]
+        return d
+
+
+class ImageTorchDataset(TorchDataset):
+    def __init__(self, dataset: ImageDataset, n_data: Optional[int] = 0):
+        super(ImageTorchDataset, self).__init__(dataset, n_data)
+        self.preload_image = dataset.preload_image
+        if self.preload_image:
+            self.images = dataset.images
+        self.input_size = dataset.image_input_size
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=dataset.image_mean, std=dataset.image_std)
+        ])
+
+    def __getitem__(self, idx):
+        idx = idx % self.n_data_
+        if self.preload_image:
+            img = self.images[idx]
+        else:
+            img = pil_loader(self.data[idx]['image_path']).resize(self.input_size)
+        img = self.transform(img)
+        d = {
+            'ids'        : idx,
+            'labels'     : self.labels[idx],
+            'weak_labels': self.weak_labels[idx],
+            'image'      : img,
         }
         if self.features is not None:
             d['features'] = self.features[idx]
@@ -80,7 +112,7 @@ class BERTTorchDataset(TorchDataset):
 
 class BERTTorchTextClassDataset(BERTTorchDataset):
     def __init__(self,
-                 dataset: BaseDataset,
+                 dataset: TextDataset,
                  tokenizer,
                  max_seq_length: Optional[int] = 512,
                  n_data: Optional[int] = 0,
@@ -128,7 +160,7 @@ class BERTTorchTextClassDataset(BERTTorchDataset):
 
 class BERTTorchRelationClassDataset(BERTTorchDataset):
     def __init__(self,
-                 dataset: BaseDataset,
+                 dataset: RelationDataset,
                  tokenizer,
                  max_seq_length: Optional[int] = 512,
                  n_data: Optional[int] = 0,

@@ -4,8 +4,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
+import torch.nn as nn
+import torchvision
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from torchvision import transforms
+from torchvision.datasets.folder import pil_loader
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModel
 
@@ -210,7 +214,7 @@ def bert_text_extractor(data: List[Dict], device: torch.device = None, model_nam
     """
 
     # assert feature == 'cls' or feature == 'avr', "Please choose from cls and avr as text feature."
-
+    @torch.no_grad()
     def extractor(data: List[Dict]):
         corpus = list(map(lambda x: x['text'], data))
         model = AutoModel.from_pretrained(model_name, **kwargs).to(device)
@@ -220,10 +224,10 @@ def bert_text_extractor(data: List[Dict], device: torch.device = None, model_nam
             inputs = tokenizer(sentence, return_tensors="pt", truncation=True, return_attention_mask=False, return_token_type_ids=False)
             inputs = inputs['input_ids'].to(device)
             if feature == 'cls':
-                output = model(inputs).pooler_output.detach().cpu().squeeze().numpy()  # [len(sentence), dim_out]
+                output = model(inputs).pooler_output.cpu().squeeze().numpy()  # [len(sentence), dim_out]
                 text_features.append(output)
             elif feature == 'avr':
-                output = model(inputs).last_hidden_state.detach().cpu().squeeze().numpy()  # [len(sentence), dim_out]
+                output = model(inputs).last_hidden_state.cpu().squeeze().numpy()  # [len(sentence), dim_out]
                 text_features.append(np.average(output, axis=0))
             else:
                 raise NotImplementedError
@@ -250,6 +254,7 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
 
     # assert feature == 'cat' or feature == 'avr', "Please choose from cat and avr as text feature."
 
+    @torch.no_grad()
     def extractor(data: List[Dict]):
         assert (('span1' in data[0]) and ('span2' in data[0])), "Passed data missing span index."
         assert (('entity1' in data[0]) and ('entity2' in data[0])), "Passed data missing entity name."
@@ -328,7 +333,7 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
             assert len(tokens) <= 512
 
             inputs = torch.tensor(tokenizer.convert_tokens_to_ids(tokens), device=device).unsqueeze(0)
-            output = model(inputs).last_hidden_state.detach().cpu().squeeze().numpy()  # [len(sentence), dim_out]
+            output = model(inputs).last_hidden_state.cpu().squeeze().numpy()  # [len(sentence), dim_out]
             cls_emb = output[0, :]
             ent1_emb, ent2_emb = np.average(output[e1s:e1n, :], axis=0), np.average(output[e2s:e2n, :], axis=0)
             if feature == "cat":
@@ -343,23 +348,40 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
     return embeddings, extractor
 
 
-def bert_entity_extractor(data: List[Dict], device: torch.device = None,
-                          model_name: Optional[str] = 'bert-base-cased', **kwargs: Any):
+#### feature extraction for ImageDataset
+def image_feature_extractor(data: List[Dict], device: torch.device = None, model_name: Optional[str] = 'resnet18', **kwargs: Any):
+    data_transform = transforms.Compose([
+        transforms.Resize(224),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    batch_size = 128
+
+    @torch.no_grad()
     def extractor(data: List[Dict]):
-        model = AutoModel.from_pretrained(model_name, **kwargs).to(device)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)  # e.g. 'bert-base-cased'
-        text_features = []
-        for item in tqdm(data):
-            s, e = item['span']
-            text = item['text']
-            left_tkns = ["[CLS]"] + tokenizer.tokenize(text[:s])
-            entity_tkns = tokenizer.tokenize(text[s:e])
-            right_tkns = tokenizer.tokenize(text[e:]) + ["[SEP]"]
-            tokens = left_tkns + entity_tkns + right_tkns
-            inputs = torch.tensor(tokenizer.convert_tokens_to_ids(tokens), device=device).unsqueeze(0)
-            output = model(inputs).last_hidden_state.detach().cpu().squeeze().numpy()  # [len(sentence), dim_out]
-            text_features.append(np.average(output[len(left_tkns):len(left_tkns + entity_tkns), :], axis=0))
-        return np.array(text_features)
+        image_paths = list(map(lambda x: x['image_path'], data))
+        pretrained_model = getattr(torchvision.models, model_name)(pretrained=True)
+        model = nn.Sequential(*list(pretrained_model.children())[:-1])
+        model.to(device)
+        model.eval()
+        image_features = []
+        imgs = []
+        for ip in tqdm(image_paths):
+            imgs.append(data_transform(pil_loader(ip)))
+
+            if len(imgs) == batch_size:
+                img_input = torch.stack(imgs).to(device)
+                output = model(img_input)
+                image_features.append(output.squeeze().cpu().numpy())
+                imgs = []
+
+        if len(imgs) > 0:
+            img_input = torch.stack(imgs).to(device)
+            output = model(img_input)
+            image_features.append(output.squeeze().cpu().numpy())
+
+        return np.vstack(image_features)
 
     embeddings = extractor(data)
     return embeddings, extractor

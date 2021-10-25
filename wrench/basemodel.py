@@ -15,11 +15,10 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-from . import get_amp_flag, get_num_workers, get_pin_memory
-from . import backbone
-from .backbone import BackBone, BERTBackBone
+from . import get_amp_flag, get_num_workers, get_pin_memory, backbone
+from .backbone import BackBone, BERTBackBone, ImageClassifier
 from .config import Config
-from .dataset import BaseDataset, TorchDataset, BaseSeqDataset
+from .dataset import BaseDataset, TorchDataset, BaseSeqDataset, ImageTorchDataset
 from .evaluation import METRIC, SEQ_METRIC, metric_to_direction
 from .utils import get_bert_torch_dataset_class, construct_collate_fn_trunc_pad, get_bert_model_class
 
@@ -369,7 +368,11 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
             dataloader = DataLoader(torch_dataset, batch_size=real_batch_size,
                                     shuffle=shuffle, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
         else:
-            torch_dataset = TorchDataset(dataset, n_data=n_steps * batch_size)
+            if isinstance(self.model, ImageClassifier) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, ImageClassifier)):
+                torch_dataset_class = ImageTorchDataset
+            else:
+                torch_dataset_class = TorchDataset
+            torch_dataset = torch_dataset_class(dataset, n_data=n_steps * batch_size)
             dataloader = DataLoader(torch_dataset, batch_size=real_batch_size, shuffle=shuffle, **kwargs)
         return dataloader
 

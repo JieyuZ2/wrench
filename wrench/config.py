@@ -25,6 +25,10 @@ DEFAULT_MLP_CONFIG = {
     'dropout'    : 0.0,
 }
 
+DEFAULT_IMAGE_CLASSIFIER_CONFIG = {
+    'model_name': 'resnet18',
+}
+
 DEFAULT_BERT_CONFIG = {
     'model_name'      : 'bert-base-cased',
     'max_tokens'      : 512,
@@ -37,9 +41,10 @@ DEFAULT_BACKBONE_CONFIG = {
 }
 
 DEFAULT_BACKBONE_MAP = {
-    'MLP'   : DEFAULT_MLP_CONFIG,
-    'LogReg': DEFAULT_LOGREG_CONFIG,
-    'BERT'  : DEFAULT_BERT_CONFIG,
+    'MLP'            : DEFAULT_MLP_CONFIG,
+    'LogReg'         : DEFAULT_LOGREG_CONFIG,
+    'ImageClassifier': DEFAULT_IMAGE_CLASSIFIER_CONFIG,
+    'BERT'           : DEFAULT_BERT_CONFIG,
 }
 
 DEFAULT_LABEL_MODEL_CONFIG = {

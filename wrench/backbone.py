@@ -4,6 +4,7 @@ from typing import Dict, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 from transformers import AutoModel, AutoConfig
 
 from .layers import WordSequence
@@ -77,11 +78,41 @@ class MLP(BackBone):
     def forward(self, batch, return_features=False):
         x = batch['features'].to(self.get_device())
         h = self.fcs(x)
-        output = self.last_layer(h)
+        logits = self.last_layer(h)
         if return_features:
-            return output, h
+            return logits, h
         else:
-            return output
+            return logits
+
+
+""" torchvision for image classification """
+
+
+class ImageClassifier(BackBone):
+
+    def __init__(self, n_class, model_name='resnet18', binary_mode=False, **kwargs):
+        super(ImageClassifier, self).__init__(n_class=n_class, binary_mode=binary_mode)
+
+        pretrained_model = getattr(torchvision.models, model_name)(pretrained=False)
+        self.model = nn.Sequential(*list(pretrained_model.children())[:-1])
+
+        # pretrained_model = getattr(torchvision.models, model_name)(pretrained=load_pretrained)
+        # self.model = nn.Sequential(*list(pretrained_model.children())[:-1])
+        # if load_pretrained and (not finetune_pretrained):
+        #     for param in self.model.parameters():
+        #         param.requires_grad = False
+
+        self.hidden_size = pretrained_model.fc.in_features
+        self.fc = nn.Linear(self.hidden_size, n_class)
+
+    def forward(self, batch, return_features=False):
+        h = self.model(batch['image'].to(self.get_device()))
+        h = torch.flatten(h, 1)
+        logits = self.fc(h)
+        if return_features:
+            return logits, h
+        else:
+            return logits
 
 
 """ BERT for text classification """
