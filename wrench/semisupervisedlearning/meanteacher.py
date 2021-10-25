@@ -104,6 +104,7 @@ class MeanTeacher(BaseTorchClassModel):
             y_train: Optional[np.ndarray] = None,
             dataset_valid: Optional[BaseDataset] = None,
             y_valid: Optional[np.ndarray] = None,
+            include_labeled_as_unlabeled: Optional[bool] = False,
             evaluation_step: Optional[int] = 100,
             metric: Optional[Union[str, Callable]] = 'acc',
             direction: Optional[str] = 'auto',
@@ -128,7 +129,11 @@ class MeanTeacher(BaseTorchClassModel):
 
         lamb = hyperparas['lamb']
         rampup_epochs = hyperparas['rampup_epochs']
-        labeled_dataset, unlabeled_dataset = dataset_train.create_split(labeled_data_idx)
+        if include_labeled_as_unlabeled:
+            labeled_dataset = dataset_train.create_subset(labeled_data_idx)
+            unlabeled_dataset = dataset_train
+        else:
+            labeled_dataset, unlabeled_dataset = dataset_train.create_split(labeled_data_idx)
 
         if y_train is None:
             y_train = dataset_train.labels
