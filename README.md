@@ -8,7 +8,6 @@
 [![repo size](https://img.shields.io/github/repo-size/JieyuZ2/wrench.svg)](https://github.com/JieyuZ2/wrench/archive/master.zip)
 [![Total lines](https://img.shields.io/tokei/lines/github/JieyuZ2/wrench?color=red)](https://github.com/JieyuZ2/wrench)
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=JieyuZ2/wrench)
-[![Github All Releases](https://img.shields.io/github/downloads/JieyuZ2/wrench/total.svg)]()
 ![GitHub stars](https://img.shields.io/github/stars/JieyuZ2/wrench.svg?color=green)
 ![GitHub forks](https://img.shields.io/github/forks/JieyuZ2/wrench?color=9cf)
 [![Arxiv](https://img.shields.io/badge/ArXiv-2109.11377-orange.svg)](https://arxiv.org/abs/2109.11377) 
