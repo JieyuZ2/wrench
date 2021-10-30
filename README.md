@@ -18,7 +18,7 @@
 **10/15/21** 
 
 1. A branch of new methods: WeaSEL, ImplyLoss, ASTRA, MeanTeacher, Meta-Weight-Net, Learning-to-Reweight
-2. Support image classification (dataset class / torchvision backbone) as well as DomainNet dataset (check out the [instruction](https://github.com/JieyuZ2/wrench/tree/main/datasets/domainnet) and the [paper](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf))
+2. Support image classification (dataset class / torchvision backbone) as well as DomainNet/Animals-with-Attributes2 datasets (check out the `datasets` folder)
 
 ## 🔧 What is it?
 
