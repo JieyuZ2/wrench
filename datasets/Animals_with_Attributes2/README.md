@@ -10,7 +10,7 @@ We could construct weak supervision tasks for each pair of unseen classes.
 
 #### Option 1
 
-Download the preprocessed data without training attribute detectors.
+Download the preprocessed data without training attribute detectors (the `Animals_with_Attributes2.zip` in this [link](https://drive.google.com/drive/folders/1v55IKG2JN9fMtKJWU48B_5_DcPWGnpTq?usp=sharing)).
 
 Unzip the data under this folder: 
 
