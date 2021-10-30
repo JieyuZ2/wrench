@@ -103,7 +103,7 @@ class WeakLabeler(nn.Module):
     Class for a weak labeler on the Domain Net dataset
     '''
 
-    def __init__(self, n_classes, model_name, pretrained=False, hidden_size=100):
+    def __init__(self, n_classes, model_name, pretrained=False):
         '''
         Constructor for an endmodel
         '''

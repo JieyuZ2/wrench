@@ -1,5 +1,5 @@
 
-## Using DomainNet Dataset to Construct Weak Supervision Tasks
+## Using DomainNet Dataset to Construct Weak Supervision Tasks (Image Classification)
 
 The overall procedure is based on this [paper](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf)
 

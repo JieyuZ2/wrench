@@ -15,7 +15,8 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-from . import get_amp_flag, get_num_workers, get_pin_memory, backbone
+from . import get_amp_flag, get_num_workers, get_pin_memory
+from . import backbone
 from .backbone import BackBone, BERTBackBone, ImageClassifier
 from .config import Config
 from .dataset import BaseDataset, TorchDataset, BaseSeqDataset, ImageTorchDataset
@@ -353,6 +354,8 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                          ) -> DataLoader:
         if 'num_workers' not in kwargs:
             kwargs['num_workers'] = get_num_workers()
+            if kwargs['num_workers'] > 0:
+                kwargs['persistent_workers'] = True
         if 'pin_memory' not in kwargs:
             kwargs['pin_memory'] = get_pin_memory()
         if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):

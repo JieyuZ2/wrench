@@ -33,7 +33,10 @@ class MajorityWeightedVoting(BaseLabelModel):
             assert len(balance) == n_class
 
         L = check_weak_labels(dataset_train)
-        self.balance = balance or self._init_balance(L, dataset_valid, y_valid, n_class)
+        if balance is None:
+            self.balance = self._init_balance(L, dataset_valid, y_valid, n_class)
+        else:
+            self.balance = balance
 
     def predict_proba(self, dataset: Union[BaseDataset, np.ndarray], **kwargs: Any) -> np.ndarray:
         L = check_weak_labels(dataset)

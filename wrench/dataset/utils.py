@@ -1,18 +1,17 @@
 import warnings
 from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple, Union
-
+import torchvision
 import numpy as np
 import torch
-import torch.nn as nn
-import torchvision
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from torchvision import transforms
-from torchvision.datasets.folder import pil_loader
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModel
-
+import torch.nn as nn
+from torchvision import transforms
+from torchvision.datasets.folder import pil_loader
+from PIL import Image
 from .basedataset import BaseDataset
 
 
@@ -218,6 +217,7 @@ def bert_text_extractor(data: List[Dict], device: torch.device = None, model_nam
     def extractor(data: List[Dict]):
         corpus = list(map(lambda x: x['text'], data))
         model = AutoModel.from_pretrained(model_name, **kwargs).to(device)
+        model.eval()
         tokenizer = AutoTokenizer.from_pretrained(model_name)  # e.g. 'bert-base-cased'
         text_features = []
         for sentence in tqdm(corpus):
@@ -262,6 +262,7 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
         span1_list, span2_list = list(map(lambda x: x['span1'], data)), list(map(lambda x: x['span2'], data))  # char level
         ent1_list, ent2_list = list(map(lambda x: x['entity1'], data)), list(map(lambda x: x['entity2'], data))
         model = AutoModel.from_pretrained(model_name, **kwargs).to(device)
+        model.eval()
         tokenizer = AutoTokenizer.from_pretrained(model_name)  # e.g. 'bert-base-cased'
         text_features = []
         for i, sentence in tqdm(enumerate(corpus)):
@@ -351,11 +352,11 @@ def bert_relation_extractor(data: List[Dict], device: torch.device = None,
 #### feature extraction for ImageDataset
 def image_feature_extractor(data: List[Dict], device: torch.device = None, model_name: Optional[str] = 'resnet18', **kwargs: Any):
     data_transform = transforms.Compose([
-        transforms.Resize(224),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+            transforms.Resize(224),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
     batch_size = 128
 
     @torch.no_grad()

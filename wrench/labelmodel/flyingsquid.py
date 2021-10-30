@@ -40,7 +40,8 @@ class FlyingSquid(BaseLabelModel):
             assert len(balance) == n_class
 
         L = check_weak_labels(dataset_train)
-        balance = balance or self._init_balance(L, dataset_valid, y_valid, n_class)
+        if balance is None:
+            balance = self._init_balance(L, dataset_valid, y_valid, n_class)
         n_class = len(balance)
         self.n_class = n_class
 
