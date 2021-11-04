@@ -1,4 +1,5 @@
 import copy
+import os
 import pickle
 from abc import ABC, abstractmethod
 from collections import Counter
@@ -7,16 +8,19 @@ from typing import Any, Dict, List, Optional, Union, Callable, Tuple
 
 import numpy as np
 import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
+import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 from snorkel.utils import probs_to_preds
-from torch import optim, nn
 from torch.cuda.amp import autocast
+from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-from . import get_amp_flag, get_num_workers, get_pin_memory
-from . import backbone
+from . import get_amp_flag, get_num_workers, get_pin_memory, backbone
 from .backbone import BackBone, BERTBackBone, ImageClassifier
 from .config import Config
 from .dataset import BaseDataset, TorchDataset, BaseSeqDataset, ImageTorchDataset
@@ -85,8 +89,35 @@ class BaseModel(ABC):
         self.__dict__.update(tmp_dict)
 
 
+def setup(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+
+    # initialize the process group
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+
+
+def cleanup():
+    dist.destroy_process_group()
+
+
+def parallel_fit_(world_size, model, rank, *args, **kwargs):
+    setup(rank, world_size)
+    model.parallel = True
+    kwargs['device'] = rank
+    model.fit(*args, **kwargs)
+    cleanup()
+
+
 class BaseTorchModel(BaseModel, ABC):
     model: Optional[BackBone]
+    parallel: bool = False
+
+    def parallel_fit(self, world_size, *args, **kwargs):
+        worker = partial(parallel_fit_, world_size, self, *args, **kwargs)
+        mp.spawn(worker,
+                 nprocs=world_size,
+                 join=True)
 
     def _init_optimizer_and_lr_scheduler(self,
                                          model: nn.Module,
@@ -306,6 +337,18 @@ class BaseSeqModel(BaseModel, ABC):
         return metric_fn(y_true, prods, dataset.id2label, strict)
 
 
+def check_bert_model(model):
+    if isinstance(model, DDP):
+        model = model.module
+    return isinstance(model, BERTBackBone) or (hasattr(model, 'backbone') and isinstance(model.backbone, BERTBackBone))
+
+
+def check_vision_model(model):
+    if isinstance(model, DDP):
+        model = model.module
+    return isinstance(model, ImageClassifier) or (hasattr(model, 'backbone') and isinstance(model.backbone, ImageClassifier))
+
+
 class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
 
     def _init_model(self,
@@ -329,6 +372,10 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                 binary_mode=hyperparas['binary_mode'],
                 **config.backbone_config['paras']
             )
+        if self.parallel:
+            rank = torch.distributed.get_rank(group=None)
+            model.to(rank)
+            model = DDP(model, device_ids=[rank], find_unused_parameters=True)
         return model
 
     def _init_label_model(self,
@@ -358,7 +405,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                 kwargs['persistent_workers'] = True
         if 'pin_memory' not in kwargs:
             kwargs['pin_memory'] = get_pin_memory()
-        if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
+        if check_bert_model(self.model):
             torch_dataset = get_bert_torch_dataset_class(dataset)(
                 dataset,
                 self.tokenizer,
@@ -371,7 +418,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
             dataloader = DataLoader(torch_dataset, batch_size=real_batch_size,
                                     shuffle=shuffle, collate_fn=construct_collate_fn_trunc_pad('mask'), **kwargs)
         else:
-            if isinstance(self.model, ImageClassifier) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, ImageClassifier)):
+            if check_vision_model(self.model):
                 torch_dataset_class = ImageTorchDataset
             else:
                 torch_dataset_class = TorchDataset
@@ -389,7 +436,7 @@ class BaseTorchClassModel(BaseClassModel, BaseTorchModel, ABC):
                                **kwargs: Any
                                ) -> DataLoader:
         hyperparas = config.hyperparas
-        if isinstance(self.model, BERTBackBone) or (hasattr(self.model, 'backbone') and isinstance(self.model.backbone, BERTBackBone)):
+        if check_bert_model(self.model):
             max_tokens = config.backbone_config['paras']['max_tokens']
         else:
             max_tokens = -1
