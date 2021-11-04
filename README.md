@@ -17,7 +17,7 @@
 
 **11/04/21** 
 
-1. Add `parallel_fit` for torch model to support pytorch DistributedDataParallel-[example](https://github.com/JieyuZ2/wrench/blob/main/examples/run_torch_ddp.py)
+1. (beta) Add `parallel_fit` for torch model to support pytorch DistributedDataParallel-[example](https://github.com/JieyuZ2/wrench/blob/main/examples/run_torch_ddp.py)
 
 **10/15/21** 
 
