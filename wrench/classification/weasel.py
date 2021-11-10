@@ -22,7 +22,7 @@ ABSTAIN = -1
 
 
 class Encoder(BackBone):
-    def __init__(self, input_size, n_rules, hidden_size, n_class, temperature, dropout=0.3):
+    def __init__(self, input_size, n_rules, hidden_size, n_class, temperature, dropout=0.3, balance=None):
         super(Encoder, self).__init__(n_class=n_class)
         self.n_rules = n_rules
         self.acc_scaler = np.sqrt(n_rules) * n_class
@@ -38,7 +38,10 @@ class Encoder(BackBone):
             nn.Dropout(dropout),
             nn.Linear(hidden_size, n_rules * n_class),
         )
-        self.log_class_prior = nn.Parameter(torch.log(torch.ones(n_class) / n_class), requires_grad=False)
+        if balance is None:
+            self.log_class_prior = nn.Parameter(torch.log(torch.ones(n_class) / n_class), requires_grad=False)
+        else:
+            self.log_class_prior = nn.Parameter(torch.from_numpy(balance), requires_grad=False)
 
     def set_class_prior(self, p):
         for i, pp in enumerate(p):
@@ -65,10 +68,10 @@ class Encoder(BackBone):
 
 
 class WeaSELModel(BackBone):
-    def __init__(self, input_size, n_rules, hidden_size, n_class, temperature, dropout, backbone):
+    def __init__(self, input_size, n_rules, hidden_size, n_class, temperature, dropout, backbone, balance):
         super(WeaSELModel, self).__init__(n_class=n_class)
         self.backbone = backbone
-        self.encoder = Encoder(input_size, n_rules, hidden_size, n_class, temperature, dropout)
+        self.encoder = Encoder(input_size, n_rules, hidden_size, n_class, temperature, dropout, balance)
         self.forward = self.backbone.forward
 
     def calculate_loss(self, batch):
@@ -78,6 +81,29 @@ class WeaSELModel(BackBone):
         loss_e = cross_entropy_with_probs(predict_e, torch.softmax(predict_f.detach(), dim=-1))
         loss = loss_e + loss_f
         return loss
+
+
+def init_balance(n_class: int,
+                 dataset_valid: Optional[Union[BaseDataset, np.ndarray]] = None,
+                 y_valid: Optional[np.ndarray] = None
+                 ):
+    if y_valid is not None:
+        y = y_valid
+    elif dataset_valid is not None:
+        y = np.array(dataset_valid.labels)
+    else:
+        return np.ones(n_class) / n_class
+    class_counts = Counter(y)
+
+    if isinstance(dataset_valid, BaseDataset):
+        assert n_class == dataset_valid.n_class
+
+    sorted_counts = np.zeros(n_class)
+    for c, cnt in class_counts.items():
+        sorted_counts[c] = cnt
+    balance = (sorted_counts + 1) / sum(sorted_counts)
+
+    return balance
 
 
 class WeaSEL(BaseTorchClassModel):
@@ -151,6 +177,7 @@ class WeaSEL(BaseTorchClassModel):
 
         n_rules = dataset_train.n_lf
         n_class = dataset_train.n_class
+        balance = init_balance(n_class, dataset_valid=dataset_valid)
 
         backbone = self._init_model(
             dataset=dataset_train,
@@ -165,7 +192,8 @@ class WeaSEL(BaseTorchClassModel):
             n_class=n_class,
             temperature=hyperparas['temperature'],
             dropout=hyperparas['dropout'],
-            backbone=backbone
+            backbone=backbone,
+            balance=balance
         )
         self.model = model.to(device)
 
