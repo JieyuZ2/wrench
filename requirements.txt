@@ -1,5 +1,5 @@
 cytoolz==0.11.0
-install dill==0.3.4
+dill==0.3.4
 flyingsquid==0.0.0a0
 future==0.18.2
 higher==0.2.1
