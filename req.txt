@@ -1,0 +1,24 @@
+cytoolz==0.11.0
+install dill==0.3.4
+flyingsquid==0.0.0a0
+future==0.18.2
+higher==0.2.1
+hmmlearn==0.2.6
+munkres==1.1.4
+numbskull==0.1.1
+patsy==0.5.1
+pgmpy==0.1.14
+pillow==8.3.2
+pytokenizations==0.7.2
+sentence-transformers==1.1.1
+sentencepiece==0.1.96
+skweak==0.2.13
+snorkel==0.9.7
+snorkel-metal==0.5.0
+statsmodels==0.12.2
+tensorboard==1.15.0
+tensorboardx==1.4
+toolz==0.11.1
+torchvision==0.10.0
+optuna==2.7.0
+seqeval==1.2.2
