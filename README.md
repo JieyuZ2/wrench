@@ -53,6 +53,8 @@ For a brief overview, please check out this [blog](https://www.snorkel.org/blog/
 To track recent advances in weak supervision, please follow this [repo](https://github.com/JieyuZ2/Awesome-Weak-Supervision).
 
 ## 🔧 Installation
+
+<s>
 [1] Install anaconda:
 Instructions here: https://www.anaconda.com/download/
 
@@ -68,7 +70,12 @@ conda env create -f environment.yml
 source activate wrench
 ```
 If this not working or you want to use only a subset of modules of Wrench, check out this [wiki page](https://github.com/JieyuZ2/wrench/wiki/Environment-Installation)
+</s>
 
+Install as pip package using:
+`pip install git+https://github.com/jimwagem/wrench.git`
+  
+  
 ## 🔧 Available Datasets
 
 The datasets can be downloaded via [this](https://drive.google.com/drive/folders/1v55IKG2JN9fMtKJWU48B_5_DcPWGnpTq?usp=sharing).
