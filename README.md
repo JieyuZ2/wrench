@@ -231,7 +231,7 @@ for i in range(n_repeats):
     model = label_model(**searched_paras)
     history = model.fit(dataset_train=train_data, dataset_valid=valid_data)
     metric_value = model.test(test_data, target)
-    meter.update(target=metric_value)
+    meter.update(**{target:metric_value})
 
 metrics = meter.get_results()
 pprint.pprint(metrics)
