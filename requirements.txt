@@ -22,3 +22,4 @@ toolz==0.11.1
 torchvision==0.10.0
 optuna==2.7.0
 seqeval==1.2.2
+numba==0.54.1
