@@ -134,7 +134,7 @@ class BaseDataset(ABC):
                 self.load_features(cache_name=cache_name)
                 return
 
-        if isinstance(extract_fn, Callable):
+        if callable(extract_fn):
             self.features = extract_fn(self.examples)
         else:
             extractor = self.extract_feature_(extract_fn=extract_fn, return_extractor=return_extractor, **kwargs)
