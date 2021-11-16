@@ -41,7 +41,7 @@ class Encoder(BackBone):
         if balance is None:
             self.log_class_prior = nn.Parameter(torch.log(torch.ones(n_class) / n_class), requires_grad=False)
         else:
-            self.log_class_prior = nn.Parameter(torch.from_numpy(balance), requires_grad=False)
+            self.log_class_prior = nn.Parameter(torch.log(torch.from_numpy(balance)), requires_grad=False)
 
     def set_class_prior(self, p):
         for i, pp in enumerate(p):
