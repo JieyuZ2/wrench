@@ -91,7 +91,8 @@ rm datasets.zip
 
 A documentation of dataset format and usage can be found in this [wiki-page](https://github.com/JieyuZ2/wrench/wiki/Dataset:-Format-and-Usage)
 
-### classification:
+### classification
+
 | Name | Task | # class | # LF | # train | # validation | # test | data source | LF source |
 |:--------|:---------|:------|:------|:------|:------|:------|:------|:------|
 | Census | income clasification | 2 | 83 | 10083 | 5561 | 16281 | [link](http://archive.ics.uci.edu/ml/datasets/Census+Income) |[link](https://openreview.net/forum?id=SkeuexBtDr) |
@@ -110,7 +111,8 @@ A documentation of dataset format and usage can be found in this [wiki-page](htt
 | Basketball | video frame classification | 2 | 4 | 17970 | 1064 | 1222 | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
 | [DomainNet](https://github.com/JieyuZ2/wrench/tree/main/datasets/domainnet) | image classification | - | - | - | - | - | [link](https://arxiv.org/pdf/1812.01754.pdf) | [link](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf) |
 
-### sequence tagging:
+### sequence tagging
+
 | Name | # class | # LF | # train | # validation | # test | data source | LF source |
 |:--------|:---------|:------|:------|:------|:------|:------|:------|
 | CoNLL-03 | 4 | 16 | 14041 | 3250 | 3453 | [link](https://arxiv.org/abs/cs/0306050) | [link](https://arxiv.org/abs/2004.14723) |
@@ -131,7 +133,7 @@ The detailed documentation is coming soon.
 
 TODO-list: check [this](https://github.com/JieyuZ2/wrench/wiki/TODO-List) out! 
 
-### classification:
+### classification
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
 | Majority Voting | Label Model | -- | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/labelmodel/majority_voting.py#L44) |
@@ -147,7 +149,7 @@ TODO-list: check [this](https://github.com/JieyuZ2/wrench/wiki/TODO-List) out!
 | Denoise | Joint Model | [link](https://arxiv.org/abs/2010.04582) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/denoise.py#L72) |
 | WeaSEL | Joint Model | [link](https://arxiv.org/abs/2107.02233) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/weasel.py#L72) |
 
-### sequence tagging:
+### sequence tagging
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
 | Hidden Markov Model | Label Model | [link](https://arxiv.org/abs/2004.14723) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/hmm.py#L81) |
@@ -157,30 +159,34 @@ TODO-list: check [this](https://github.com/JieyuZ2/wrench/wiki/TODO-List) out!
 | LSTM-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L45) |
 | BERT-ConNet | Joint Model | [link](https://arxiv.org/abs/1910.04289) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/seqtagging/connet.py#L210) |
 
-### classification-to-sequence-tagging wrapper:
+### classification-to-sequence-tagging wrapper
 Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrench/blob/main/wrench/seq_labelmodel/seq_wrapper.py#L43) that adaptes label model for classification task to sequence tagging task.
 
-### methods from related domains:
+### methods from related domains
 
-#### Robust Learning methods as end model:
+#### Robust Learning methods as end model
 
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
 | Meta-Weight-Net | End Model | [link](https://arxiv.org/abs/1902.07379) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/meta_weight_net.py#L34) |
 | Learning2ReWeight | End Model | [link](https://arxiv.org/abs/1803.09050) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/metalearning/learn_to_reweight.py#L20) |
 
-#### Semi-Supervised Learning methods as end model:
+#### Semi-Supervised Learning methods as end model
 
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
 | MeanTeacher | End Model | [link](https://arxiv.org/abs/1703.01780) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/semisupervisedlearning/meanteacher.py#L61) |
 
-#### Weak Supervision with cleaned labels (Semi-Weak Supervision):
+#### Weak Supervision with cleaned labels (Semi-Weak Supervision)
 
 | Model | Model Type | Reference | Link to Wrench |
 |:--------|:---------|:------|:------|
 | ImplyLoss | Joint Model | [link](https://arxiv.org/abs/2004.06025) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/implyloss.py#L42) |
 | ASTRA | Joint Model | [link](https://www.microsoft.com/en-us/research/publication/self-training-weak-supervision-astra/) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/astra.py#L87) |
+
+## Leaderboard
+
+(...)
 
 # 🔧  Quick examples
 
