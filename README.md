@@ -184,6 +184,10 @@ Wrench also provides a [`SeqLabelModelWrapper`](https://github.com/JieyuZ2/wrenc
 | ImplyLoss | Joint Model | [link](https://arxiv.org/abs/2004.06025) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/implyloss.py#L42) |
 | ASTRA | Joint Model | [link](https://www.microsoft.com/en-us/research/publication/self-training-weak-supervision-astra/) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/astra.py#L87) |
 
+## Metrics
+
+(...)
+
 ## Leaderboard
 
 (...)
