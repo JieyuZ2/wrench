@@ -19,7 +19,7 @@ device = torch.device('cuda')
 #### Load dataset
 dataset_path = '../datasets/'
 data = 'laptopreview'
-train_data, valid_data, test_data = load_dataset(dataset_path, data, extract_feature=False)
+train_data, valid_data, test_data = load_dataset(dataset_path, data, extract_feature=False, device=device)
 
 #### Run label model: HMM
 label_model = HMM(
