@@ -40,7 +40,7 @@ def get_dataset_type(dataset_name):
         return RelationDataset
     elif dataset_name in seq_dataset_list:
         return BaseSeqDataset
-    raise NotImplementedError(f'cannot recognize the dataset type for '{dataset_name}'! please specify the dataset_type.')
+    raise NotImplementedError(f'cannot recognize the dataset type for {dataset_name}! please specify the dataset_type.')
 
 
 def load_dataset(data_home, dataset, dataset_type=None, extract_feature=False, extract_fn=None, **kwargs):
