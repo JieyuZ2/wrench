@@ -111,6 +111,8 @@ A documentation of dataset format and usage can be found in this [wiki-page](htt
 | Basketball | video frame classification | 2 | 4 | 17970 | 1064 | 1222 | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
 | [DomainNet](https://github.com/JieyuZ2/wrench/tree/main/datasets/domainnet) | image classification | - | - | - | - | - | [link](https://arxiv.org/pdf/1812.01754.pdf) | [link](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf) |
 
+(todo: multiclass / multilabel?)
+
 ### sequence tagging
 
 | Name | # class | # LF | # train | # validation | # test | data source | LF source |
