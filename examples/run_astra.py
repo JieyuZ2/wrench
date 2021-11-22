@@ -18,10 +18,10 @@ device = torch.device('cuda')
 #### Load dataset
 dataset_path = f'../datasets/'
 data = 'census'
-train_data, valid_data, test_data = load_dataset(dataset_path, data, extract_feature=True)
+train_data, valid_data, test_data = load_dataset(dataset_path, data, extract_feature=True, extract_fn='bert')
 
 #### Load given labeled data ids
-idx, _ = train_data.load_labeled_ids_and_lf_exemplars(f'{dataset_path}/{data}/labeled_ids.json')
+idx, _ = train_data.load_labeled_ids_and_lf_exemplars(f'{dataset_path}/{data}/label.json')
 
 #### Run end model: Astra
 model = Astra(
