@@ -13,7 +13,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 logger = logging.getLogger(__name__)
 
-device = torch.device('cuda')
+device = torch.device('cpu')
 
 #### Load dataset
 dataset_path = '../datasets/'
@@ -67,29 +67,29 @@ model.fit(
 acc = model.test(test_data, 'acc')
 logger.info(f'end model (MLP) test acc: {acc}')
 
-#### Run end model: BERT
-model = EndClassifierModel(
-    batch_size=32,
-    real_batch_size=16,  # for accumulative gradient update
-    test_batch_size=512,
-    n_steps=1000,
-    backbone='BERT',
-    backbone_model_name='bert-base-cased',
-    backbone_max_tokens=128,
-    backbone_fine_tune_layers=-1, # fine  tune all
-    optimizer='AdamW',
-    optimizer_lr=5e-5,
-    optimizer_weight_decay=0.0,
-)
-model.fit(
-    dataset_train=train_data,
-    y_train=aggregated_soft_labels,
-    dataset_valid=valid_data,
-    evaluation_step=10,
-    metric='acc',
-    patience=50,
-    device=device
-)
-acc = model.test(test_data, 'acc')
-logger.info(f'end model (BERT) test acc: {acc}')
+# #### Run end model: BERT
+# model = EndClassifierModel(
+#     batch_size=32,
+#     real_batch_size=16,  # for accumulative gradient update
+#     test_batch_size=512,
+#     n_steps=1000,
+#     backbone='BERT',
+#     backbone_model_name='bert-base-cased',
+#     backbone_max_tokens=128,
+#     backbone_fine_tune_layers=-1, # fine  tune all
+#     optimizer='AdamW',
+#     optimizer_lr=5e-5,
+#     optimizer_weight_decay=0.0,
+# )
+# model.fit(
+#     dataset_train=train_data,
+#     y_train=aggregated_soft_labels,
+#     dataset_valid=valid_data,
+#     evaluation_step=10,
+#     metric='acc',
+#     patience=50,
+#     device=device
+# )
+# acc = model.test(test_data, 'acc')
+# logger.info(f'end model (BERT) test acc: {acc}')
 

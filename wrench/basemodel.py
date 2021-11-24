@@ -252,13 +252,27 @@ class BaseClassModel(BaseModel, ABC):
         proba = self.predict_proba(dataset, **kwargs)
         return probs_to_preds(probs=proba)
 
-    def test(self, dataset: Union[BaseDataset, np.ndarray], metric_fn: Union[Callable, str], y_true: Optional[np.ndarray] = None, **kwargs):
-        if isinstance(metric_fn, str):
-            metric_fn = METRIC[metric_fn]
+    def test(self, dataset: Union[list, BaseDataset, np.ndarray], metric_fn: Union[Callable, str], y_true: Optional[np.ndarray] = None, **kwargs):
         if y_true is None:
-            y_true = np.array(dataset.labels)
+                y_true = np.array(dataset.labels)
         probas = self.predict_proba(dataset, **kwargs)
-        return metric_fn(y_true, probas)
+
+        if isinstance(metric_fn, list):
+            metrics = metric_fn
+        else:
+            metrics = [metric_fn]
+
+        results = []
+        for metric in metrics:
+            if isinstance(metric, str):
+                metric = METRIC[metric]
+            
+            results.append(metric(y_true, probas))
+        
+        if len(results)==1:
+            return results[0]
+        else:
+            return results
 
 
 class BaseLabelModel(BaseClassModel):
