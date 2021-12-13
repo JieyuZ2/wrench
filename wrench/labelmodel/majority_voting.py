@@ -72,7 +72,7 @@ class MajorityVoting(BaseLabelModel):
                 assert n_class == dataset_train.n_class
             else:
                 n_class = dataset_train.n_class
-        self.n_class = n_class or np.max(check_weak_labels(dataset_train)) + 1
+        self.n_class = n_class or int(np.max(check_weak_labels(dataset_train))) + 1
 
     def predict_proba(self, dataset: Union[BaseDataset, np.ndarray], weight: Optional[np.ndarray] = None,
                       **kwargs: Any) -> np.ndarray:
