@@ -214,10 +214,10 @@ def apply(model, dataset, model_classes, device, batch_size=512):
         inputs = x.to(device)
         proba = torch.softmax(model(inputs), 1)
 
-        _, preds = torch.max(proba, 1)
+        probs, preds = torch.max(proba, 1)
 
         predictions.extend(preds.tolist())
-        probas.extend(proba.tolist())
+        probas.extend(probs.tolist())
 
     model.train()
     target_class = target_dataset.classes
