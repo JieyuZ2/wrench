@@ -388,7 +388,7 @@ class Astra(BaseTorchClassModel):
                 optimizer.zero_grad()
                 for unlabeled_batch in unlabeled_dataloader:
                     idx_u = unlabeled_batch['ids'].long().to(device)
-                    predict_u = model(batch)
+                    predict_u = model(unlabeled_batch)
                     loss = cross_entropy_with_probs(predict_u, pseudo_probas_u[idx_u])
                     loss.backward()
                     cnt += 1
