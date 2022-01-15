@@ -194,10 +194,10 @@ def grid_search(model: BaseModel,
                 metric_value = 0
                 for i in trange(n_repeats):
                     val = worker((suggestions, i))
-                    if i == 0 and prune_threshold > 0 and trial._trial_id > 0:
-                        if (trial.study.best_value - val) > (prune_threshold * trial.study.best_value):
-                            return val
                     metric_value += val
+                    if prune_threshold > 0 and trial._trial_id > 0:
+                        if (trial.study.best_value - val) > (prune_threshold * trial.study.best_value):
+                            return metric_value / (i+1)
                 value = metric_value / n_repeats
                 return value
             except KeyboardInterrupt:
