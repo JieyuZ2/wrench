@@ -1,4 +1,5 @@
 import _thread as thread
+import json
 import logging
 import multiprocessing
 import random
@@ -7,6 +8,7 @@ import threading
 import warnings
 from copy import deepcopy
 from functools import partial
+from pathlib import Path
 from typing import Any, Dict, Optional, Union, Callable
 
 import optuna
@@ -72,6 +74,22 @@ class StopWhenNotImproved:
                         self.no_improve_cnt += 1
                         if self.no_improve_cnt >= self.patience:
                             study.stop()
+
+
+class RecordCallback:
+    def __init__(self, metric: str, save_path: str):
+        self.metric = metric
+        self.save_path = Path(save_path)
+        self.save_path.mkdir(parents=True, exist_ok=True)
+        self.record = {}
+        self.trial_cnt = 0
+
+    def __call__(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> None:
+        if trial.state == optuna.trial.TrialState.COMPLETE:
+            self.record[self.trial_cnt] = trial.params
+            self.record[self.trial_cnt][self.metric] = trial.value
+            self.trial_cnt += 1
+            json.dump(self.record, open(self.save_path / 'search_record.json', 'w'), indent=4)
 
 
 class RandomGridSampler(GridSampler):
@@ -142,6 +160,7 @@ def grid_search(model: BaseModel,
                 study_timeout: Optional[int] = None,
                 parallel: Optional[bool] = False,
                 study_name: Optional[str] = None,
+                save_path: Optional[str] = None,
                 **kwargs: Any):
     if direction == 'auto':
         direction = metric_to_direction(metric)
@@ -169,6 +188,8 @@ def grid_search(model: BaseModel,
     callbacks = []
     if study_patience > 0:
         callbacks.append(StopWhenNotImproved(patience=study_patience, min_trials=min_trials))
+    if save_path is not None:
+        callbacks.append(RecordCallback(metric=metric, save_path=save_path))
 
     if parallel:
         if trial_timeout > 0: warnings.warn('Parallel searching does not support trial time out!')
@@ -197,7 +218,7 @@ def grid_search(model: BaseModel,
                     metric_value += val
                     if prune_threshold > 0 and trial._trial_id > 0:
                         if (trial.study.best_value - val) > (prune_threshold * trial.study.best_value):
-                            return metric_value / (i+1)
+                            return metric_value / (i + 1)
                 value = metric_value / n_repeats
                 return value
             except KeyboardInterrupt:
