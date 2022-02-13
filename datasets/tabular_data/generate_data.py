@@ -144,7 +144,8 @@ def main(args):
 
     dataset = openml.datasets.get_dataset(args.data_name)
     X, y, categorical_indicator, attribute_names = dataset.get_data(target=dataset.default_target_attribute)
-    X.loc[:, categorical_indicator] = X.loc[:, categorical_indicator].apply(lambda x: pd.factorize(x)[0])
+    if np.any(categorical_indicator):
+        X.loc[:, categorical_indicator] = X.loc[:, categorical_indicator].apply(lambda x: pd.factorize(x)[0])
     y = pd.factorize(y)
 
     clf = RandomForestClassifier(n_estimators=args.n_trees, max_depth=args.max_depth, random_state=args.seed)
