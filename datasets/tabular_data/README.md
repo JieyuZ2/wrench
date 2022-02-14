@@ -9,7 +9,7 @@ Run the script to generate dataset:
 python generate_dataset.py --data_dir ../ --data_name mushroom --n_trees 20 --max_depth 3 --max_features 3
 ```
 Where `n_trees` specify how many decision trees will be used to generate labeling functions, note that the number of final labeling functions could be less than number of trees because we remove trees resulting duplicate labeling;
-Note that `max_depth`, `max_depth`, and `max_features` are arguments for `sklearn.ensemble.RandomForestClassifier`.
+Note that `n_trees`, `max_depth`, `max_depth`, and `max_features` are arguments for `sklearn.ensemble.RandomForestClassifier`.
 This command will use the `mushroom` dataset from `openml`, specifically, the dataset will be downloaded by the following code in the script
 
 ```
