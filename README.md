@@ -50,6 +50,8 @@ url={https://openreview.net/forum?id=Q9SKS5k8io}
 
 For a brief overview, please check out this [blog](https://www.snorkel.org/blog/weak-supervision).
 
+For more context, please check out this [survey](https://arxiv.org/abs/2202.05433).
+
 To track recent advances in weak supervision, please follow this [repo](https://github.com/JieyuZ2/Awesome-Weak-Supervision).
 
 ## 🔧 Installation
