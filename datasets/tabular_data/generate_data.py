@@ -73,14 +73,21 @@ def get_rules(tree):
     paths = []
     path = []
 
+    features = [
+        i if i != _tree.TREE_UNDEFINED else "undefined!"
+        for i in tree_.feature
+    ]
+
     def recurse(node, path, paths):
 
         if tree_.feature[node] != _tree.TREE_UNDEFINED:
             threshold = tree_.threshold[node]
+            feature = features[node]
+            assert feature != 'undefined!'
             p1, p2 = list(path), list(path)
-            p1 += [(node, np.round(threshold, 3), True)]  # <=
+            p1 += [(feature, np.round(threshold, 3), True)]  # <=
             recurse(tree_.children_left[node], p1, paths)
-            p2 += [(node, np.round(threshold, 3), False)]  # >
+            p2 += [(feature, np.round(threshold, 3), False)]  # >
             recurse(tree_.children_right[node], p2, paths)
         else:
             path += [(tree_.value[node], tree_.n_node_samples[node])]
@@ -245,8 +252,8 @@ def main(args):
     dump({i: c for i, c in enumerate(labels)}, data_dir / 'label.json')
 
     json.dump({
-        'rules': rules, 
-        'rules_description': rules_text, 
+        'rules': rules,
+        'rules_description': rules_text,
         'config':{
             'n_trees': args.n_trees,
             'max_depth': args.max_depth,
@@ -259,14 +266,14 @@ def main(args):
 if __name__ == '__main__':
     # mushroom spambase PhishingWebsites Bioresponse bank-marketing
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_name', default='bank-marketing', help="dataset name")
-    parser.add_argument('--data_dir', required=False, default='./', help="folder to save dataset")
+    parser.add_argument('--data_name', default='mushroom', help="dataset name")
+    parser.add_argument('--data_dir', required=False, default='../', help="folder to save dataset")
     parser.add_argument('--class_encode', required=False, default=['0', '1'], nargs='+', )
     parser.add_argument('--seed', default=42, help="random seed")
     parser.add_argument('--used_data', type=float, default=0.1, help="percent of data used for generating rules")
     parser.add_argument('-n', '--n_trees', type=int, default=20)
     parser.add_argument('-d', '--max_depth', type=int, default=3)
-    parser.add_argument('-f', '--max_features', type=int, default=2)
+    parser.add_argument('-f', '--max_features', default=2)
     args = parser.parse_args()
 
     label_encode = {
