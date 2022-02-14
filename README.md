@@ -15,6 +15,10 @@
 
 ## 🔧 New
 
+**2/13/22** 
+
+1. Add script to generate LFs for any tabular dataset as well as 5 new tabular datasets, namely, mushroom, spambase, PhishingWebsites, Bioresponse, and bank-marketing.
+
 **11/04/21** 
 
 1. (beta) Add `parallel_fit` for torch model to support pytorch DistributedDataParallel-[example](https://github.com/JieyuZ2/wrench/blob/main/examples/run_torch_ddp.py)
