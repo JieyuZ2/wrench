@@ -17,7 +17,7 @@
 
 **2/13/22** 
 
-1. Add script to generate LFs for any tabular dataset as well as 5 new tabular datasets, namely, mushroom, spambase, PhishingWebsites, Bioresponse, and bank-marketing.
+1. Add [script](https://github.com/JieyuZ2/wrench/tree/main/datasets/tabular_data) to generate LFs for any tabular dataset as well as 5 new tabular datasets, namely, mushroom, spambase, PhishingWebsites, Bioresponse, and bank-marketing.
 
 **11/04/21** 
 
