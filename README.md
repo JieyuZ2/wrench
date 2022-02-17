@@ -79,14 +79,7 @@ If this not working or you want to use only a subset of modules of Wrench, check
 
 The datasets can be downloaded via [this](https://drive.google.com/drive/folders/1v55IKG2JN9fMtKJWU48B_5_DcPWGnpTq?usp=sharing).
 
-or via command line
-
-```
-pip install gdown 
-gdown https://drive.google.com/uc?id=19wMFmpoo_0ORhBzB6n16B1nRRX508AnJ
-unzip datasets.zip
-rm datasets.zip 
-```
+**Note that some datasets may have more training examples than what is reported in README/paper because we include the dev set, whose indices can be found in labeled_id.json if exists.**
 
 A documentation of dataset format and usage can be found in this [wiki-page](https://github.com/JieyuZ2/wrench/wiki/Dataset:-Format-and-Usage)
 
