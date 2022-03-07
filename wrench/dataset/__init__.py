@@ -1,10 +1,11 @@
 from .basedataset import BaseDataset
-from .dataset import NumericDataset, TextDataset, RelationDataset, ImageDataset
+from .dataset import NumericDataset, TextDataset, RelationDataset, ImageDataset, GraphTextDataset
 from .seqdataset import BaseSeqDataset
 from .torchdataset import sample_batch, TorchDataset, BERTTorchTextClassDataset, BERTTorchRelationClassDataset, ImageTorchDataset
 
 numeric_datasets = ['census', 'basketball', 'tennis', 'commercial']
 text_datasets = ['agnews', 'imdb', 'sms', 'trec', 'yelp', 'youtube']
+graph_text_datasets = ['YelpZip']
 relation_dataset = ['cdr', 'spouse', 'chemprot', 'semeval']
 cls_dataset_list = numeric_datasets + text_datasets + relation_dataset
 bin_cls_dataset_list = numeric_datasets + ['cdr', 'spouse', 'sms', 'yelp', 'imdb', 'youtube']
@@ -40,6 +41,8 @@ def get_dataset_type(dataset_name):
         return RelationDataset
     elif dataset_name in seq_dataset_list:
         return BaseSeqDataset
+    elif dataset_name in graph_text_datasets:
+        return GraphTextDataset
     raise NotImplementedError('cannot recognize the dataset type! please specify the dataset_type.')
 
 
@@ -50,9 +53,9 @@ def load_dataset(data_home, dataset, dataset_type=None, extract_feature=False, e
         dataset_class = eval(dataset_type)
 
     dataset_path = Path(data_home) / dataset
-    train_data = dataset_class(path=dataset_path, split='train')
-    valid_data = dataset_class(path=dataset_path, split='valid')
-    test_data = dataset_class(path=dataset_path, split='test')
+    train_data = dataset_class(path=dataset_path, split='train', **kwargs)
+    valid_data = dataset_class(path=dataset_path, split='valid', **kwargs)
+    test_data = dataset_class(path=dataset_path, split='test', **kwargs)
 
     if extract_feature and (dataset_class != BaseSeqDataset):
         extractor_fn = train_data.extract_feature(extract_fn=extract_fn, return_extractor=True, **kwargs)

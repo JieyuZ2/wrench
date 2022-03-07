@@ -33,6 +33,7 @@ class BaseDataset(ABC):
 
         self.split = split
         self.path = path
+
         if path is not None and split is not None:
             self.load(path=path, split=split)
             self.load_features(feature_cache_name)
