@@ -29,27 +29,6 @@ class NumericDataset(BaseDataset):
         if return_extractor:
             return lambda y: np.array(list(map(lambda x: x['feature'], y)), dtype=np.float32)
 
-class GraphDataset(BaseDataset):
-    def __init__(self,
-                 path: str = None,
-                 split: Optional[str] = None,
-                 feature_cache_name: Optional[str] = None,
-                 **kwargs: Any) -> None:
-        import dgl
-        super().__init__(path, split, feature_cache_name, **kwargs)
-        if self.path is not None:
-            self.graph_path = os.path.join(self.path, 'graph.bin')
-            self.graph = dgl.load_graphs(self.graph_path)
-                
-
-class GraphNumericDataset(GraphDataset, NumericDataset):
-    """Data class for numeric dataset."""
-    def __init__(self,
-                 path: str = None,
-                 split: Optional[str] = None,
-                 feature_cache_name: Optional[str] = None,
-                 **kwargs: Any) -> None:
-        GraphDataset.__init__(self, path, split, feature_cache_name, **kwargs)
 
 class TextDataset(BaseDataset):
     """Data class for text classification dataset."""
@@ -94,16 +73,6 @@ class TextDataset(BaseDataset):
 
         if return_extractor:
             return extractor
-
-class GraphTextDataset(GraphDataset, TextDataset):
-    """Data class for text graph node classification dataset."""
-
-    def __init__(self,
-                 path: str = None,
-                 split: Optional[str] = None,
-                 feature_cache_name: Optional[str] = None,
-                 **kwargs: Any) -> None:
-        GraphDataset.__init__(self, path, split, feature_cache_name,  **kwargs)
     
 
 

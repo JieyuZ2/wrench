@@ -1,11 +1,12 @@
 from .basedataset import BaseDataset
-from .dataset import NumericDataset, TextDataset, RelationDataset, ImageDataset, GraphTextDataset
+from .dataset import NumericDataset, TextDataset, RelationDataset, ImageDataset
 from .seqdataset import BaseSeqDataset
+from .graphdataset import GraphDataset, GraphNumericDataset, GraphTextDataset
 from .torchdataset import sample_batch, TorchDataset, BERTTorchTextClassDataset, BERTTorchRelationClassDataset, ImageTorchDataset
 
 numeric_datasets = ['census', 'basketball', 'tennis', 'commercial']
 text_datasets = ['agnews', 'imdb', 'sms', 'trec', 'yelp', 'youtube']
-graph_text_datasets = ['YelpZip']
+graph_text_datasets = ['yelpzip']
 relation_dataset = ['cdr', 'spouse', 'chemprot', 'semeval']
 cls_dataset_list = numeric_datasets + text_datasets + relation_dataset
 bin_cls_dataset_list = numeric_datasets + ['cdr', 'spouse', 'sms', 'yelp', 'imdb', 'youtube']
