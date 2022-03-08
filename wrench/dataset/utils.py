@@ -216,7 +216,6 @@ def bert_text_extractor(data: List[Dict], device: torch.device = None, model_nam
     @torch.no_grad()
     def extractor(data: List[Dict]):
         corpus = list(map(lambda x: x['text'], data))
-        print(**kwargs)
         model = AutoModel.from_pretrained(model_name, **kwargs).to(device)
         model.eval()
         tokenizer = AutoTokenizer.from_pretrained(model_name)  # e.g. 'bert-base-cased'
