@@ -56,7 +56,7 @@ class GraphDataset(BaseDataset):
             self.weak_labels.append(item['weak_labels'])
             self.examples.append(item['data'])
             self.nodes.append(item['data']['node_id'])
-        node = self.nodes
+
         label_path = self.path / f'label.json'
         self.id2label = {int(k): v for k, v in json.load(open(label_path, 'r')).items()}
 
