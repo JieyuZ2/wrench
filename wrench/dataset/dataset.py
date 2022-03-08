@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
+import os
 import numpy as np
 import torch
 from torchvision.datasets.folder import pil_loader
@@ -31,6 +32,7 @@ class NumericDataset(BaseDataset):
 
 class TextDataset(BaseDataset):
     """Data class for text classification dataset."""
+
 
     def extract_feature_(self,
                          extract_fn: str,
@@ -71,6 +73,7 @@ class TextDataset(BaseDataset):
 
         if return_extractor:
             return extractor
+    
 
 
 class RelationDataset(BaseDataset):
