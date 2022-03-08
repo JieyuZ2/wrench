@@ -114,7 +114,7 @@ dependencies:
   - python-dateutil=2.8.2=pyhd3eb1b0_0
   - python-editor=1.0.4=py_0
   - python_abi=3.6=2_cp36m
-  # - pytorch=1.9.0=py3.6_cuda10.2_cudnn7.6.5_0
+  - pytorch=1.9.0=py3.6_cuda10.2_cudnn7.6.5_0
   - pytz=2021.1=pyhd3eb1b0_0
   - pyyaml=5.4.1=py36h27cfd23_1
   - qdldl-python=0.1.5=py36h0cdc3f0_1
@@ -179,4 +179,4 @@ dependencies:
     - tensorboard==1.15.0
     - tensorboardx==1.4
     - toolz==0.11.1
-    # - torchvision==0.10.0
+    - torchvision==0.10.0
