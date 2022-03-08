@@ -28,38 +28,12 @@ class GraphDataset(BaseDataset):
             self.graph = dgl.load_graphs(str(self.graph_path))
 
     def load(self, path: str, split: str):
-        """Method for loading data given the split.
-
-        Parameters
-        ----------
-        split
-            A str with values in {"train", "valid", "test", None}. If None, then do not load any data.
-        Returns
-        -------
-        self
-        """
-
-        assert split in ["train", "valid", "test"], 'Parameter "split" must be in ["train", "valid", "test", None]'
-
-        path = Path(path)
-
-        self.split = split
-        self.path = path
-        self.nodes = []
-
+        super().load(self.path, self.split)
+        self.node_id = []
         data_path = path / f'{split}.json'
-        logger.info(f'loading data from {data_path}')
         data = json.load(open(data_path, 'r'))
         for i, item in tqdm(data.items()):
-            self.ids.append(i)
-            self.labels.append(item['label'])
-            self.weak_labels.append(item['weak_labels'])
-            self.examples.append(item['data'])
-            self.nodes.append(item['data']['node_id'])
-
-        label_path = self.path / f'label.json'
-        self.id2label = {int(k): v for k, v in json.load(open(label_path, 'r')).items()}
-
+            self.node_id.append(item["data"]["node_id"])
         return self
                 
 
