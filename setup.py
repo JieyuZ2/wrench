@@ -3,7 +3,6 @@ from typing import Dict
 from setuptools import find_packages, setup
 
 # version.py defines the VERSION and VERSION_SHORT variables.
-# We use exec here so we don't import snorkel.
 VERSION: Dict[str, str] = {}
 with open("wrench/version.py", "r") as version_file:
     exec(version_file.read(), VERSION)
@@ -18,7 +17,7 @@ setup(
     author="Jieyu Zhang",
     author_email="jieyuzhang97@gmail.com",
     url="https://github.com/JieyuZ2/wrench",
-    description="a weak supervision learning benchmark",
+    description="a benchmark for weak supervision",
     long_description_content_type="text/markdown",
     long_description=long_description,
     license="Apache License 2.0",
