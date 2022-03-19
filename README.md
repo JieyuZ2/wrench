@@ -14,6 +14,8 @@
 
 
 ## 🔧 New
+**3/18/22**
+1. Wrench is avilable on [ws-benchmark](https://pypi.org/project/ws-benchmark/) now, using `pip install ws-benchmark` to qucik install.
 
 **2/13/22** 
 
