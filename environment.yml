@@ -2,8 +2,8 @@ name: wrench
 channels:
   - huggingface
   - pytorch
-  - defaults
   - conda-forge
+  - defaults
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=1_llvm
@@ -17,7 +17,7 @@ dependencies:
   - botocore=1.21.21=pyhd3eb1b0_1
   - brotlipy=0.7.0=py36h27cfd23_1003
   - c-ares=1.17.1=h27cfd23_0
-  - ca-certificates=2021.7.5=h06a4308_1
+  - ca-certificates=2021.10.8=ha878542_0
   - cachetools=4.2.2=pyhd3eb1b0_0
   - catalogue=2.0.5=py36h5fab9bb_0
   - certifi=2021.5.30=py36h06a4308_0
@@ -33,7 +33,7 @@ dependencies:
   - contextvars=2.4=py_0
   - coverage=5.5=py36h27cfd23_2
   - cryptography=3.4.7=py36hd23ed53_0
-  - cudatoolkit=10.2.89=hfd86e86_1
+  - cudatoolkit=10.2.89=h8f6ccaa_10
   - cvxpy=1.1.13=py36h5fab9bb_0
   - cvxpy-base=1.1.13=py36h84e8a9e_0
   - cymem=2.0.5=py36h2531618_0
@@ -91,7 +91,7 @@ dependencies:
   - numpy=1.19.2=py36h54aff64_0
   - numpy-base=1.19.2=py36hfa32c7d_0
   - openblas=0.3.3=h9ac9557_1001
-  - openssl=1.1.1l=h7f8727e_0
+  - openssl=1.1.1l=h7f98852_0
   - optuna=2.7.0=pyhd8ed1ab_0
   - osqp=0.6.2=py36h0cdc3f0_2
   - packaging=21.0=pyhd3eb1b0_0
@@ -128,7 +128,6 @@ dependencies:
   - scipy=1.5.2=py36h0b6359f_0
   - scs=2.0.2=py36h0290663_1000
   - seqeval=1.2.2=pyhd3deb0d_0
-  - setuptools=52.0.0=py36h06a4308_0
   - shellingham=1.3.1=py_0
   - six=1.16.0=pyhd3eb1b0_0
   - smart_open=5.1.0=pyhd3eb1b0_0
@@ -151,27 +150,42 @@ dependencies:
   - urllib3=1.26.6=pyhd3eb1b0_1
   - wasabi=0.8.2=pyhd3eb1b0_0
   - wcwidth=0.2.5=py_0
-  - wheel=0.37.0=pyhd3eb1b0_0
   - xz=5.2.5=h7b6447c_0
   - yaml=0.2.5=h7b6447c_0
   - yarl=1.6.3=py36h27cfd23_0
   - zipp=3.5.0=pyhd3eb1b0_0
   - zlib=1.2.11=h7b6447c_3
   - pip:
+    - bleach==4.1.0
     - cytoolz==0.11.0
     - dill==0.3.4
+    - docutils==0.18.1
     - flyingsquid==0.0.0a0
     - future==0.18.2
     - higher==0.2.1
     - hmmlearn==0.2.6
+    - huggingface-hub==0.0.8
+    - jeepney==0.7.1
+    - keyring==23.4.1
+    - liac-arff==2.5.0
+    - minio==7.1.5
     - munkres==1.1.4
     - numbskull==0.1.1
+    - openml==0.12.2
     - patsy==0.5.1
     - pgmpy==0.1.14
     - pillow==8.3.2
+    - pkginfo==1.8.2
+    - pyarrow==6.0.1
+    - pygments==2.11.2
     - pytokenizations==0.7.2
+    - readme-renderer==34.0
+    - requests-toolbelt==0.9.1
+    - rfc3986==1.5.0
+    - secretstorage==3.3.1
     - sentence-transformers==1.1.1
     - sentencepiece==0.1.96
+    - setuptools==59.6.0
     - skweak==0.2.13
     - snorkel==0.9.7
     - snorkel-metal==0.5.0
@@ -180,3 +194,7 @@ dependencies:
     - tensorboardx==1.4
     - toolz==0.11.1
     - torchvision==0.10.0
+    - twine==3.8.0
+    - webencodings==0.5.1
+    - wheel==0.37.1
+    - xmltodict==0.12.0
