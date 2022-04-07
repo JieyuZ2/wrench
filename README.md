@@ -36,6 +36,7 @@
 
 For more information, checkout our publications: 
 - [WRENCH: A Comprehensive Benchmark for Weak Supervision](https://arxiv.org/abs/2109.11377) (NeurIPS 2021)
+- [A Survey on Programmatic Weak Supervision](https://arxiv.org/pdf/2202.05433.pdf)
 
 If you find this repository helpful, feel free to cite our publication:
 
