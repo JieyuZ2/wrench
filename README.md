@@ -14,6 +14,16 @@
 
 
 ## 🔧 New
+**4/20/22**
+1. We have updated the `setup.py` to make installation more flexible.
+
+Please use `pip install ws-benchmark==1.1.2rc0` to install the latest version. We strongly suggest create a new environment to install wrench. We will bring better compatibility in the next stable release.
+ If you have any problems with installation, please let us know.
+
+Known incompatibilities:
+
+`tensorflow==2.8.0`, `albumentations==0.1.12`
+
 **3/18/22**
 1. Wrench is available on [ws-benchmark](https://pypi.org/project/ws-benchmark/) now, using `pip install ws-benchmark` to qucik install.
 
