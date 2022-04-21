@@ -55,7 +55,6 @@ setup(
         'numbskull==0.1.1',
         'numba==0.43.0',
         'snorkel-metal>=0.5.0',
-        'spacy>=2.1.0,<3.0.0',
         'skweak>=0.2.13',
         'networkx>=2.2,<2.7',
     ],
