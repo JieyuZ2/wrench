@@ -132,7 +132,7 @@ class CorrelatedGenerator(ConditionalIndependentGenerator):
             self.lf_targets[overlap_lf] = self.lf_targets[target]
             self.dep_graph.append((overlap_lf, target))
         for conflict_lf, target in zip(self.conflict_lfs, self.conflict_target_lf):
-            self.lf_targets[conflict_lf] = self.sampel_other_label(self.lf_targets[target])
+            self.lf_targets[conflict_lf] = self.sample_other_label(self.lf_targets[target])
             self.dep_graph.append((conflict_lf, target))
         for duplicate_lf, target in zip(self.duplicate_lfs, self.duplicate_target_lf):
             self.lf_targets[duplicate_lf] = self.lf_targets[target]

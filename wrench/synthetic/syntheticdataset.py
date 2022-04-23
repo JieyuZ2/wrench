@@ -30,7 +30,7 @@ class BaseSyntheticGenerator(ABC):
         dataset = SyntheticDataset(split=split, id2label=self.id2labels.copy(), **generated)
         return dataset
 
-    def sampel_other_label(self, label):
+    def sample_other_label(self, label):
         other_labels = [i for i in range(self.n_class) if i != label]
         p = np.array([self.class_prior[i] for i in other_labels])
         p = p / np.sum(p)
