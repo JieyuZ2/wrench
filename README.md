@@ -15,7 +15,9 @@
 
 ## 🔧 New
 **5/17/22**
+
 We have noticed that there are still some bugs about the newest wrench, however, most features are useable, we will release a stable version ASAP. Sorry for the inconvenience. Thanks for your support!
+
 **4/20/22**
 1. We have updated the `setup.py` to make installation more flexible.
 
