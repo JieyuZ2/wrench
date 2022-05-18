@@ -1,6 +1,6 @@
 import random
 from collections import Counter
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import numpy as np
 import torch
@@ -181,3 +181,16 @@ def construct_collate_fn_trunc_pad(mask: str):
         return batch
 
     return collate_fn_trunc_pad
+
+
+def create_tuples(dataset: Union[BaseDataset, np.ndarray]):
+    ids = np.repeat(np.array(range(len(dataset))), len(dataset.weak_labels[0]))
+    workers = np.repeat(
+        np.array([i for i in range(len(dataset.weak_labels[0]))]), len(dataset.weak_labels)
+    ).reshape(len(dataset.weak_labels[0]), -1).T.reshape(-1)
+    classes = np.array(dataset.weak_labels).reshape(-1)
+
+    tuples = np.vstack((ids, workers, classes))
+    tuples = tuples[:, tuples[2, :] != -1]
+
+    return tuples.T
