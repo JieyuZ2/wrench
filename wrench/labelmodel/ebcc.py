@@ -10,15 +10,21 @@ from ..utils import create_tuples
 
 
 def ebcc_vb(tuples,
+            num_items,
+            num_workers,
+            num_classes,
             a_pi=0.1,
             num_groups=10,  # M
             alpha=1,  # alpha_k, it can be 1 or \sum_i gamma_ik
             a_v=4,  # beta_kk
             b_v=1,  # beta_kk', k neq k'
+            eta_km=None,
+            nu_k=None,
+            mu_jkml=None,
+            eval=False,
             seed=1234,
             inference_iter=500,
             empirical_prior=False):
-    num_items, num_workers, num_classes = tuples.max(axis=0) + 1
 
     y_is_one_lij = []
     y_is_one_lji = []
@@ -45,13 +51,13 @@ def ebcc_vb(tuples,
     np.random.seed(seed)
     zg_ikm = np.random.dirichlet(np.ones(num_groups), z_ik.shape) * z_ik[:, :, None]
     for it in range(inference_iter):
-        eta_km = a_pi / num_groups + zg_ikm.sum(axis=0)
-        nu_k = alpha + z_ik.sum(axis=0)
-
-        mu_jkml = np.zeros((num_workers, num_classes, num_groups, num_classes)) + beta_kl[None, :, None, :]
-        for l in range(num_classes):
-            for k in range(num_classes):
-                mu_jkml[:, k, :, l] += y_is_one_lji[l].dot(zg_ikm[:, k, :])
+        if eval is False:
+            eta_km = a_pi / num_groups + zg_ikm.sum(axis=0)
+            nu_k = alpha + z_ik.sum(axis=0)
+            mu_jkml = np.zeros((num_workers, num_classes, num_groups, num_classes)) + beta_kl[None, :, None, :]
+            for l in range(num_classes):
+                for k in range(num_classes):
+                    mu_jkml[:, k, :, l] += y_is_one_lji[l].dot(zg_ikm[:, k, :])
 
         Eq_log_pi_km = digamma(eta_km) - digamma(eta_km.sum(axis=-1, keepdims=True))
         Eq_log_tau_k = digamma(nu_k) - digamma(nu_k.sum())
@@ -80,7 +86,7 @@ def ebcc_vb(tuples,
     alpha0_jkm = mu_jkml.sum(axis=-1)
     ELBO += ((alpha0_jkm - num_classes) * digamma(alpha0_jkm) - gammaln(alpha0_jkm)).sum()
     ELBO += entropy(zg_ikm.reshape(num_items, -1).T).sum()
-    return z_ik, ELBO
+    return z_ik, ELBO, eta_km, nu_k, mu_jkml
 
 
 class EBCC(BaseLabelModel):
@@ -105,8 +111,13 @@ class EBCC(BaseLabelModel):
             'inference_iter': inference_iter,
             **kwargs
         }
+        self.params = {
+            'seed': None,
+            'eta_km': None,
+            'nu_k': None,
+            'mu_jkml': None,
+        }
         self.repeat = repeat
-        self.seed = None
 
     def fit(self,
             dataset_train: Union[BaseDataset, np.ndarray],
@@ -116,22 +127,35 @@ class EBCC(BaseLabelModel):
             verbose: Optional[bool] = False,
             *args: Any,
             **kwargs: Any):
-        train_tuples = create_tuples(dataset_train)
+        tuples = create_tuples(dataset_train)
+        num_items, _, num_classes = tuples.max(axis=0) + 1
+        num_workers = len(dataset_train.weak_labels[0])
         max_elbo = float('-inf')
-
-        self.seed = None
 
         for infer in range(self.repeat):
             seed = np.random.randint(1e8)
-            self.seed = seed
-            prediction, elbo = ebcc_vb(train_tuples, seed=seed, **self.hyperparas)
+            prediction, elbo, p1, p2, p3 = ebcc_vb(tuples,
+                                                   num_items, num_workers, num_classes,
+                                                   seed=seed,
+                                                   **self.hyperparas)
             if elbo > max_elbo:
-                self.seed = seed
+                print(f'update elbo: new: {elbo}, old: {max_elbo}')
+                self.params = {
+                    'seed': seed,
+                    'eta_km': p1,
+                    'nu_k': p2,
+                    'mu_jkml': p3
+                }
+                max_elbo = elbo
 
     def predict_proba(self,
                       dataset: Union[BaseDataset, np.ndarray],
                       **kwargs: Any):
         tuples = create_tuples(dataset)
-        prediction, elbo = ebcc_vb(tuples, seed=self.seed, **self.hyperparas)
-
-        return prediction
+        num_items, _, num_classes = tuples.max(axis=0) + 1
+        num_workers = len(dataset.weak_labels[0])
+        pred, elbo, _, _, _ = ebcc_vb(tuples,
+                                      num_items, num_workers, num_classes,
+                                      eval=True,
+                                      **self.hyperparas, **self.params)
+        return pred

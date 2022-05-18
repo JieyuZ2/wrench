@@ -8,21 +8,29 @@ from wrench.dataset import BaseDataset
 from ..utils import create_tuples
 
 
-def ibcc(tuples, a_v=4, b_v=1, alpha=1):
-    num_items, num_workers, num_classes = tuples.max(axis=0) + 1
+def ibcc(tuples,
+         num_items,
+         num_workers,
+         num_classes,
+         a_v=4,
+         b_v=1,
+         alpha=1,
+         n_jkl=None,
+         eval=False):
 
     y_is_one_kij = []
     y_is_one_kji = []
     for k in range(num_classes):
         selected = (tuples[:, 2] == k)
-        coo_ij = ssp.coo_matrix((np.ones(selected.sum()), tuples[selected, :2].T), shape=(num_items, num_workers),
-                                dtype=np.bool)
+        coo_ij = ssp.coo_matrix((np.ones(selected.sum()), tuples[selected, :2].T),
+                                shape=(num_items, num_workers), dtype=np.bool)
         y_is_one_kij.append(coo_ij.tocsr())
         y_is_one_kji.append(coo_ij.T.tocsr())
 
     # initialization
     prior_kl = np.eye(num_classes) * (a_v - b_v) + b_v
-    n_jkl = np.empty((num_workers, num_classes, num_classes))
+    if n_jkl is None:
+        n_jkl = np.empty((num_workers, num_classes, num_classes))
 
     # MV initialize Z
     z_ik = np.zeros((num_items, num_classes))
@@ -35,8 +43,9 @@ def ibcc(tuples, a_v=4, b_v=1, alpha=1):
         # E step
         Eq_log_pi_k = digamma(z_ik.sum(axis=0) + alpha)  # - digamma(num_items + num_classes * alpha)
 
-        for l in range(num_classes):
-            n_jkl[:, :, l] = y_is_one_kji[l].dot(z_ik)
+        if eval is False:
+            for l in range(num_classes):
+                n_jkl[:, :, l] = y_is_one_kji[l].dot(z_ik)
 
         Eq_log_v_jkl = digamma(n_jkl + prior_kl[None, :, :]) - \
                        digamma(n_jkl.sum(axis=-1) + prior_kl.sum(axis=-1))[:, :, None]
@@ -53,7 +62,7 @@ def ibcc(tuples, a_v=4, b_v=1, alpha=1):
 
         if np.allclose(last_z_ik, z_ik, atol=1e-3):
             break
-    return z_ik
+    return z_ik, n_jkl
 
 
 class IBCC(BaseLabelModel):
@@ -69,6 +78,9 @@ class IBCC(BaseLabelModel):
             'b_v': b_v,
             **kwargs
         }
+        self.params = {
+            'n_jkl': None,
+        }
 
     def fit(self,
             dataset_train: Union[BaseDataset, np.ndarray],
@@ -78,11 +90,18 @@ class IBCC(BaseLabelModel):
             verbose: Optional[bool] = False,
             *args: Any,
             **kwargs: Any):
-        pass
+        tuples = create_tuples(dataset_train)
+        num_items, num_workers, num_classes = tuples.max(axis=0) + 1
+        _, param = ibcc(tuples, num_items, num_workers, num_classes, **self.hyperparas)
+        self.params['n_jkl'] = param
 
     def predict_proba(self,
                       dataset: Union[BaseDataset, np.ndarray],
                       **kwargs: Any):
         tuples = create_tuples(dataset)
-
-        return ibcc(tuples, **self.hyperparas)
+        num_items, _, num_classes = tuples.max(axis=0) + 1
+        num_workers = len(dataset.weak_labels[0])
+        pred, _ = ibcc(tuples, num_items, num_workers, num_classes,
+                       eval=True,
+                       **self.hyperparas, **self.params)
+        return pred
