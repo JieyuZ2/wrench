@@ -98,22 +98,22 @@ A documentation of dataset format and usage can be found in this [wiki-page](htt
 
 ### classification:
 | Name | Task | # class | # LF | # train | # validation | # test | data source | LF source |
-|:--------|:---------|:------|:------|:------|:------|:------|:------|:------|
-| Census | income clasification | 2 | 83 | 10083 | 5561 | 16281 | [link](http://archive.ics.uci.edu/ml/datasets/Census+Income) |[link](https://openreview.net/forum?id=SkeuexBtDr) |
-| Youtube | spam clasification | 2 | 10 | 1586 | 120 | 250 | [link](https://archive.ics.uci.edu/ml/datasets/YouTube+Spam+Collection) | [link](https://github.com/snorkel-team/snorkel-tutorials/tree/master/spam) |
-| SMS | spam clasification | 2 | 73 | 4571 | 500 | 500 | [link](https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection) | [link](https://openreview.net/forum?id=SkeuexBtDr) |
-| IMDB | sentiment clasification | 2 | 8 | 20000 | 2500 | 2500 | [link](https://dl.acm.org/doi/10.5555/2002472.2002491) | [link](https://arxiv.org/abs/2010.04582) |
-| Yelp | sentiment clasification | 2 | 8 | 30400 | 3800 | 3800 | [link](https://arxiv.org/abs/1509.01626) | [link](https://arxiv.org/abs/2010.04582) |
-| AGNews | topic clasification | 4 | 9 | 96000 | 12000 | 12000 | [link](https://arxiv.org/abs/1509.01626) | [link](https://arxiv.org/abs/2010.04582) |
-| TREC | question classification | 6 | 68 | 4965 | 500 | 500 | [link](https://aclanthology.org/C02-1150.pdf) | [link](https://openreview.net/forum?id=SkeuexBtDr) |
-| Spouse | relation classification | 2 | 9 | 22254 | 2801 | 2701 | [link](http://ceur-ws.org/Vol-1568/paper8.pdf) | [link](https://arxiv.org/abs/1711.10160) |
-| SemEval | relation classification | 9 | 164 | 1749 | 200 | 692 | [link](https://aclanthology.org/S10-1006/) | [link](https://arxiv.org/abs/1909.02177) |
-| CDR | bio relation classification | 2 | 33 | 8430 | 920 | 4673 | [link](https://pubmed.ncbi.nlm.nih.gov/27651457/) | [link](https://arxiv.org/abs/1711.10160) |
-| Chemprot | chemical relation classification | 10 | 26 | 12861 | 1607 | 1607 | [link](https://www.semanticscholar.org/paper/Overview-of-the-BioCreative-VI-chemical-protein-Krallinger-Rabal/eed781f498b563df5a9e8a241c67d63dd1d92ad5) | [link](https://arxiv.org/abs/2010.07835) |
-| Commercial | video frame classification | 2 | 4 | 64130 | 9479 | 7496 | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
-| Tennis Rally | video frame classification | 2 | 6 | 6959 | 746 | 1098 | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
-| Basketball | video frame classification | 2 | 4 | 17970 | 1064 | 1222 | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
-| [DomainNet](https://github.com/JieyuZ2/wrench/tree/main/datasets/domainnet) | image classification | - | - | - | - | - | [link](https://arxiv.org/pdf/1812.01754.pdf) | [link](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf) |
+|:--------|:---------|:------|:------|:------|:-------------|:-------|:------|:------|
+| Census | income clasification | 2 | 83 | 10083 | 5561         | 16281  | [link](http://archive.ics.uci.edu/ml/datasets/Census+Income) |[link](https://openreview.net/forum?id=SkeuexBtDr) |
+| Youtube | spam clasification | 2 | 10 | 1586 | 120          | 250    | [link](https://archive.ics.uci.edu/ml/datasets/YouTube+Spam+Collection) | [link](https://github.com/snorkel-team/snorkel-tutorials/tree/master/spam) |
+| SMS | spam clasification | 2 | 73 | 4571 | 500          | 500    | [link](https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection) | [link](https://openreview.net/forum?id=SkeuexBtDr) |
+| IMDB | sentiment clasification | 2 | 8 | 20000 | 2500         | 2500   | [link](https://dl.acm.org/doi/10.5555/2002472.2002491) | [link](https://arxiv.org/abs/2010.04582) |
+| Yelp | sentiment clasification | 2 | 8 | 30400 | 3800         | 3800   | [link](https://arxiv.org/abs/1509.01626) | [link](https://arxiv.org/abs/2010.04582) |
+| AGNews | topic clasification | 4 | 9 | 96000 | 12000        | 12000  | [link](https://arxiv.org/abs/1509.01626) | [link](https://arxiv.org/abs/2010.04582) |
+| TREC | question classification | 6 | 68 | 4965 | 500          | 500    | [link](https://aclanthology.org/C02-1150.pdf) | [link](https://openreview.net/forum?id=SkeuexBtDr) |
+| Spouse | relation classification | 2 | 9 | 22254 | 2801         | 2701   | [link](http://ceur-ws.org/Vol-1568/paper8.pdf) | [link](https://arxiv.org/abs/1711.10160) |
+| SemEval | relation classification | 9 | 164 | 1749 | 178            | 600      | [link](https://aclanthology.org/S10-1006/) | [link](https://arxiv.org/abs/1909.02177) |
+| CDR | bio relation classification | 2 | 33 | 8430 | 920          | 4673   | [link](https://pubmed.ncbi.nlm.nih.gov/27651457/) | [link](https://arxiv.org/abs/1711.10160) |
+| Chemprot | chemical relation classification | 10 | 26 | 12861 | 1607         | 1607   | [link](https://www.semanticscholar.org/paper/Overview-of-the-BioCreative-VI-chemical-protein-Krallinger-Rabal/eed781f498b563df5a9e8a241c67d63dd1d92ad5) | [link](https://arxiv.org/abs/2010.07835) |
+| Commercial | video frame classification | 2 | 4 | 64130 | 9479         | 7496   | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
+| Tennis Rally | video frame classification | 2 | 6 | 6959 | 746          | 1098   | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
+| Basketball | video frame classification | 2 | 4 | 17970 | 1064         | 1222   | [link](https://arxiv.org/pdf/2002.11955.pdf) | [link](https://arxiv.org/abs/2002.11955) |
+| [DomainNet](https://github.com/JieyuZ2/wrench/tree/main/datasets/domainnet) | image classification | - | - | - | -            | -      | [link](https://arxiv.org/pdf/1812.01754.pdf) | [link](http://cs.brown.edu/people/sbach/files/mazzetto-icml21.pdf) |
 
 ### sequence tagging:
 | Name | # class | # LF | # train | # validation | # test | data source | LF source |
@@ -200,7 +200,7 @@ import numpy as np
 import pprint
 
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.search import grid_search
 from wrench import labelmodel 
 from wrench.evaluation import AverageMeter
@@ -261,7 +261,7 @@ import logging
 import torch
 
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.endmodel import MLPModel
 
 #### Just some code to print debug information to stdout
@@ -306,7 +306,7 @@ import logging
 import torch
 
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.endmodel import MLPModel
 from wrench.labelmodel import MajorityVoting
 
@@ -365,7 +365,7 @@ import logging
 import torch
 
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.synthetic import ConditionalIndependentGenerator, NGramLFGenerator
 from wrench.labelmodel import FlyingSquid
 

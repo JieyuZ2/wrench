@@ -17,7 +17,7 @@ device = torch.device('cuda')
 
 #### Load dataset
 dataset_path = '../datasets/'
-data = 'youtube'
+data = 'semeval'
 train_data, valid_data, test_data = load_dataset(
     dataset_path,
     data,
