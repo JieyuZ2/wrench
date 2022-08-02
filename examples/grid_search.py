@@ -2,7 +2,7 @@ import logging
 import torch
 import numpy as np
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.search import grid_search
 from wrench.endmodel import EndClassifierModel
 

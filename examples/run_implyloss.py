@@ -2,7 +2,7 @@ import logging
 import torch
 
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.classification import ImplyLoss
 
 #### Just some code to print debug information to stdout

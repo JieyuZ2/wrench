@@ -53,7 +53,7 @@ import torch
 from wrench.dataset import load_image_dataset
 from wrench.endmodel import EndClassifierModel
 from wrench.labelmodel import Snorkel
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.classification import WeaSEL
 
 #### Just some code to print debug information to stdout

@@ -6,5 +6,4 @@ from .majority_voting import MajorityVoting, MajorityWeightedVoting
 from .metal import MeTaL
 from .naive_bayes import NaiveBayesModel
 from .snorkel import Snorkel
-from .ebcc import EBCC
-from .ibcc import IBCC
+from .weapo import Weapo

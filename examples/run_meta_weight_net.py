@@ -1,7 +1,7 @@
 import logging
 import torch
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.labelmodel import Snorkel
 from wrench.metalearning import MetaWeightNet
 

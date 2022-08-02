@@ -1,7 +1,7 @@
 import logging
 
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 
 #### Just some code to print debug information to stdout
 logging.basicConfig(format='%(asctime)s - %(message)s',

@@ -52,8 +52,13 @@ def precision_score_(y_true: np.ndarray, y_proba: np.ndarray, average: str, **kw
 def auc_score_(y_true: np.ndarray, y_proba: np.ndarray, **kwargs):
     if len(np.unique(y_true)) > 2:
         return 0.0
-    fpr, tpr, thresholds = cls_metric.roc_curve(y_true, y_proba[:, 1], pos_label=1, **kwargs)
-    return cls_metric.auc(fpr, tpr)
+    return cls_metric.roc_auc_score(y_true, y_proba[:, 1], **kwargs)
+
+
+def ap_score_(y_true: np.ndarray, y_proba: np.ndarray, **kwargs):
+    if len(np.unique(y_true)) > 2:
+        return 0.0
+    return cls_metric.average_precision_score(y_true, y_proba[:, 1], pos_label=1, **kwargs)
 
 
 def f1_score_seq(y_true: List[List], y_pred: List[List], id2label: dict, strict=True):
@@ -86,6 +91,7 @@ def recall_seq(y_true: List[List], y_pred: List[List], id2label: dict, strict=Tr
 METRIC = {
     'acc'               : accuracy_score_,
     'auc'               : auc_score_,
+    'ap'                : ap_score_,
     'f1_binary'         : partial(f1_score_, average='binary'),
     'f1_micro'          : partial(f1_score_, average='micro'),
     'f1_macro'          : partial(f1_score_, average='macro'),

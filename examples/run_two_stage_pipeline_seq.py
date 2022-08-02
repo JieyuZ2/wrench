@@ -2,7 +2,7 @@ import logging
 import torch
 from wrench.dataset.utils import get_glove_embedding
 from wrench.dataset import load_dataset
-from wrench.logging import LoggingHandler
+from wrench._logging import LoggingHandler
 from wrench.seq_labelmodel import HMM
 from wrench.seq_endmodel import LSTMTaggerModel, BERTTaggerModel
 
