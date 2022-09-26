@@ -1,9 +1,8 @@
-import copy
 import logging
 import torch
-from wrench.dataset import load_dataset, TextDataset
+from wrench.dataset import load_dataset
 from wrench._logging import LoggingHandler
-from wrench.labelmodel import EBCC, IBCC, Snorkel
+from wrench.labelmodel import EBCC, IBCC
 
 
 #### Just some code to print debug information to stdout

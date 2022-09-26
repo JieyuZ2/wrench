@@ -3,6 +3,7 @@ import numpy as np
 import scipy.sparse as ssp
 from scipy.special import digamma, gammaln
 from scipy.stats import entropy, dirichlet
+from tqdm import trange
 
 from wrench.basemodel import BaseLabelModel
 from wrench.dataset import BaseDataset
@@ -90,15 +91,35 @@ def ebcc_vb(tuples,
 
 
 class EBCC(BaseLabelModel):
+    """Enhanced BCC (eBCC)
+
+    Usage:
+
+        ebcc = EBCC(num_groups, a_pi, a_v, b_v, repeat, inference_iter, empirical_prior)
+        ebcc.fit(train_data)
+        ebcc.test(test_data)
+
+    Parameters:
+
+        num_groups: number of subtypes
+        a_pi: The parameter of dirichlet distribution to generate mixture weight.
+        a_v: b_kk, number of corrected labeled items under every class.
+        b_v: b_kk', all kind of miss has made b_kk' times.
+        repeat: ELBO update times.
+        inference_iter: Iterations of variational inference.
+        empirical_prior: The empirical prior of alpha.
+        seed: Random seed.
+    """
     def __init__(self,
                  num_groups: Optional[int] = 10,
                  a_pi: Optional[float] = 0.1,
                  alpha: Optional[float] = 1,
                  a_v: Optional[float] = 4,
                  b_v: Optional[float] = 1,
-                 repeat: Optional[int] = 1000,
-                 inference_iter: Optional[int] = 500,
-                 empirical_prior=False,
+                 repeat: Optional[int] = 5,
+                 inference_iter: Optional[int] = 1000,
+                 seed: Optional[int] = None,
+                 empirical_prior=True,
                  **kwargs: Any):
         super().__init__()
         self.hyperparas = {
@@ -117,6 +138,7 @@ class EBCC(BaseLabelModel):
             'nu_k': None,
             'mu_jkml': None,
         }
+        self.seed = seed
         self.repeat = repeat
 
     def fit(self,
@@ -132,21 +154,36 @@ class EBCC(BaseLabelModel):
         num_workers = len(dataset_train.weak_labels[0])
         max_elbo = float('-inf')
 
-        for infer in range(self.repeat):
-            seed = np.random.randint(1e8)
-            prediction, elbo, p1, p2, p3 = ebcc_vb(tuples,
-                                                   num_items, num_workers, num_classes,
-                                                   seed=seed,
-                                                   **self.hyperparas)
-            if elbo > max_elbo:
-                print(f'update elbo: new: {elbo}, old: {max_elbo}')
-                self.params = {
-                    'seed': seed,
-                    'eta_km': p1,
-                    'nu_k': p2,
-                    'mu_jkml': p3
-                }
-                max_elbo = elbo
+        if self.seed is None:
+            for _ in trange(0, self.repeat, unit='epoch'):
+                seed = np.random.randint(1e8)
+                prediction, elbo, p1, p2, p3 = ebcc_vb(tuples,
+                                                       num_items, num_workers, num_classes,
+                                                       seed=seed,
+                                                       **self.hyperparas)
+                if elbo > max_elbo:
+                    print(f'update elbo: new: {elbo}, old: {max_elbo}')
+                    self.params = {
+                        'seed': seed,
+                        'eta_km': p1,
+                        'nu_k': p2,
+                        'mu_jkml': p3
+                    }
+                    max_elbo = elbo
+                    pred = prediction
+        else:
+            pred, elbo, p1, p2, p3 = ebcc_vb(tuples,
+                                             num_items, num_workers, num_classes,
+                                             seed=self.seed,
+                                             **self.hyperparas)
+
+            self.params = {
+                'seed': self.seed,
+                'eta_km': p1,
+                'nu_k': p2,
+                'mu_jkml': p3
+            }
+        return pred
 
     def predict_proba(self,
                       dataset: Union[BaseDataset, np.ndarray],
@@ -154,8 +191,14 @@ class EBCC(BaseLabelModel):
         tuples = create_tuples(dataset)
         num_items, _, num_classes = tuples.max(axis=0) + 1
         num_workers = len(dataset.weak_labels[0])
+        eval = True
+
+        if self.params['nu_k'] is None or self.params['mu_jkml'] is None:
+            eval = False
+
         pred, elbo, _, _, _ = ebcc_vb(tuples,
                                       num_items, num_workers, num_classes,
-                                      eval=True,
-                                      **self.hyperparas, **self.params)
+                                      eval=eval,
+                                      **self.hyperparas,
+                                      **self.params)
         return pred
