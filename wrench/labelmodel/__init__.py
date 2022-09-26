@@ -7,3 +7,6 @@ from .metal import MeTaL
 from .naive_bayes import NaiveBayesModel
 from .snorkel import Snorkel
 from .weapo import Weapo
+from .ebcc import EBCC
+from .ibcc import IBCC
+from .fable import Fable
