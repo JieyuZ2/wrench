@@ -4,12 +4,10 @@ from typing import Any, Optional, Union, Callable, List
 import numpy as np
 import torch
 import torch.nn as nn
-import sklearn.metrics as cls_metric
 from torch.cuda.amp import autocast
 from tqdm.auto import trange
 from transformers import AutoTokenizer
 
-from .utils import calc_prior
 from ..utils import set_seed
 from .loss import *
 from .. import get_amp_flag
@@ -20,6 +18,10 @@ from ..dataset import BaseDataset, sample_batch
 from ..utils import cross_entropy_with_probs
 
 logger = logging.getLogger(__name__)
+
+
+def calc_prior(labels: List, n_class: int):
+    return [labels.count(i) for i in range(n_class)]
 
 
 def _LF_re_correction(dataset: BaseDataset, ranking: np.ndarray, n: int):
@@ -149,7 +151,6 @@ class ARS2(BaseTorchClassModel):
                    loss_type,
                    outputs,
                    target,
-                   step=None,
                    n_class=None,
                    samples_per_cls=None,
                    reduction='none',
@@ -213,13 +214,6 @@ class ARS2(BaseTorchClassModel):
         label_is_true = np.array(data.labels) == y_train
         ranking = np.vstack([scores, ids, label_is_true, pred_labels, y_train])
         return ranking
-
-    def _score_eval(self, ranking: np.ndarray):
-        fpr, tpr, thresholds = cls_metric.roc_curve(ranking[2], ranking[0])
-        auc = cls_metric.auc(fpr, tpr)
-        ndcg = cls_metric.ndcg_score(np.array([ranking[2]]), np.array([ranking[0]]),
-                                     k=int(ranking[0].shape[0] * self.hyperparas['ndcg_ratio']))
-        return auc, ndcg
 
     def _get_new_dataset(self,
                          dataset: BaseDataset,
