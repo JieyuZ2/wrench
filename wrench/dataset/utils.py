@@ -409,3 +409,18 @@ def get_glove_embedding(embedding_file_path=None, PAD='PAD', UNK='UNK'):
     embedding = np.concatenate([embedding, spec_word], axis=0).astype(np.float)
 
     return word_dict, embedding
+
+
+def create_unbalanced_set(data: BaseDataset, imbalance_ratio: int):
+    miu = (1 / imbalance_ratio) ** (1 / (data.n_class-1))
+    ids = np.argsort(data.labels)
+    prior = [data.labels.count(i) for i in range(data.n_class)]
+    imbalance_list = np.array([int(n * miu ** i) for (i, n) in enumerate(prior)])  # n_i * μ^i
+    print(imbalance_list)
+    prior_cumsum = np.cumsum(prior)
+    prior_cumsum = np.insert(prior_cumsum, 0, 0)
+
+    sampled_ids = np.concatenate([np.random.choice(ids[prior_cumsum[i]:prior_cumsum[i + 1]], n)
+                                  for i, n in enumerate(imbalance_list)])
+
+    return sampled_ids
