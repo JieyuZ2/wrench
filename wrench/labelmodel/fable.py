@@ -210,6 +210,7 @@ def fable_vb(tuples,
         sigma_init_temp = torch.tensor(kernel_function(X)).to(device)
     sigma_init_temp = sigma_init_temp + torch.eye(num_items).to(device) * 1e-3
 
+    # Options for initializing other inverse matrix calculation methods
     sigma_inv = torch.linalg.inv(sigma_init_temp)
     sigma_hat = []
     for l in range(num_classes * num_groups):
@@ -217,8 +218,9 @@ def fable_vb(tuples,
 
     z_ik = torch.zeros((num_items, num_classes))
     for l in range(num_classes):
-        z_ik[:, [l]] += torch.tensor(y_is_one_lij[l].sum(axis=-1) + 1e-3)
+        z_ik[:, [l]] += torch.tensor(y_is_one_lij[l].sum(axis=-1) + 1e-5)
     z_ik /= z_ik.sum(dim=-1, keepdim=True)
+    z_ik = z_ik.double()
 
     if empirical_prior:
         alpha = z_ik.sum(dim=0)
@@ -239,8 +241,7 @@ def fable_vb(tuples,
         if eval is False:
             # update rules for q(Tau)
             nu_k = alpha + z_ik.sum(dim=0)
-            mu_jkml = torch.zeros((num_workers, num_classes, num_groups, num_classes + 1)) + beta_mu_kl[None, :, None,
-                                                                                             :]
+            mu_jkml = torch.zeros((num_workers, num_classes, num_groups, num_classes + 1)) + beta_mu_kl[None, :, None, :]
             # update rules for q(V)
             for l in list(range(num_classes)) + [-1]:
                 for k in range(num_classes):
@@ -269,12 +270,12 @@ def fable_vb(tuples,
 
         # update rules for q(Lambda)
         alpha_ga_i = ga_ik.sum(dim=-1) + 1
-
-        a_ga_ikm = torch.tensor(2.0, dtype=torch.float64)
+        a_ga_ikm = (zg_ikm + 1.0).double()
         b_ga_ikm = math.log(2.0) - m_hat / 2.0
 
         # update rules for m_hat and sigma_hat
-        divide_ab = a_ga_ikm / b_ga_ikm.reshape((num_items, num_classes * num_groups))
+        divide_ab = a_ga_ikm.reshape((num_items, num_classes * num_groups)) / b_ga_ikm.reshape(
+            (num_items, num_classes * num_groups))
         divide_ab = divide_ab.to(device, non_blocking=True, dtype=torch.float64)
         ga_ik = ga_ik.to(device, non_blocking=True, dtype=torch.float64)
         c_ik = c_ik.to(device, non_blocking=True)
@@ -293,11 +294,12 @@ def fable_vb(tuples,
                 sigma_hat_tmp = sigma_hat_tmp.double()
 
             m_hat[:, k] = (0.5 * sigma_hat_tmp.to(device) @ (divide_ab[:, k] - ga_ik[:, k])).to('cpu')
-            sigma_hat[k] = sigma_hat_tmp.to('cpu')
+            sigma_hat[k] = sigma_hat_tmp.to('cpu')  # save gpu memory
             del sigma_hat_tmp  # save gpu memory
 
         # q(G, Z)
-        Eq_log_pi_ikm = digamma(a_ga_ikm) - torch.log(b_ga_ikm.reshape(num_items, num_classes, num_groups))
+        Eq_log_pi_ikm = digamma(a_ga_ikm.reshape(num_items, num_classes, num_groups)) - torch.log(
+            b_ga_ikm.reshape(num_items, num_classes, num_groups))
         Eq_log_tau_k = digamma(nu_k) - digamma(nu_k.sum())
         Eq_log_v_jkml = digamma(mu_jkml) - digamma(mu_jkml.sum(dim=-1, keepdim=True))
 
