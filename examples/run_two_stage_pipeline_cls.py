@@ -17,7 +17,7 @@ device = torch.device('cuda')
 
 #### Load dataset
 dataset_path = '../datasets/'
-data = 'semeval'
+data = 'youtube'
 train_data, valid_data, test_data = load_dataset(
     dataset_path,
     data,
@@ -57,7 +57,7 @@ model = EndClassifierModel(
 )
 model.fit(
     dataset_train=train_data,
-    y_train=aggregated_hard_labels,
+    y_train=aggregated_soft_labels,
     dataset_valid=valid_data,
     evaluation_step=10,
     metric='acc',

@@ -16,7 +16,7 @@ device = torch.device('cuda')
 
 #### Load dataset
 dataset_path = '../datasets/'
-data = 'youtube'
+data = 'census'
 bert_model_name = 'bert-base-cased'
 train_data, valid_data, test_data = load_dataset(
     dataset_path,
@@ -30,32 +30,35 @@ train_data, valid_data, test_data = load_dataset(
 
 #### Run WeaSEL
 model = WeaSEL(
-    temperature=1.0,
+    temperature=0.33,
     dropout=0.3,
-    hidden_size=100,
+    hidden_size=512,
 
-    batch_size=16,
-    real_batch_size=8,
+    batch_size=32,
+    real_batch_size=-1,
     test_batch_size=128,
-    n_steps=10000,
-    grad_norm=1.0,
+    n_steps=100000,
+    grad_norm=-1,
 
-    # backbone='MLP',
-    backbone='BERT',
-    backbone_model_name=bert_model_name,
-    backbone_fine_tune_layers=-1,  # fine  tune all
-    optimizer='AdamW',
-    optimizer_lr=5e-5,
+    backbone='MLP',
+    backbone_dropout=0.2,  # fine  tune all
+    backbone_hidden_size=256,
+    backbone_n_hidden_layers=2,
+
+    use_lr_scheduler=True,
+    optimizer='default',
+    optimizer_lr=0.001,
     optimizer_weight_decay=0.0,
 )
 model.fit(
     dataset_train=train_data,
     dataset_valid=valid_data,
-    evaluation_step=10,
-    metric='acc',
-    patience=100,
+    evaluation_step=5,
+    metric='f1_binary',
+    patience=200,
     device=device
 )
-acc = model.test(test_data, 'acc')
-logger.info(f'WeaSEL test acc: {acc}')
+f1 = model.test(test_data, 'f1_binary')
+logger.info(f'WeaSEL test f1: {f1}')
+a=1
 

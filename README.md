@@ -15,6 +15,9 @@
 
 ## 🔧 New
 **4/20/22**
+1. Add [WS explainer](https://github.com/JieyuZ2/wrench/tree/main/examples/run_explainer.py), please find more details in our [paper](https://openreview.net/forum?id=X8mmH03wFlD).
+
+**4/20/22**
 1. We have updated the `setup.py` to make installation more flexible.
 
 Please use `pip install ws-benchmark==1.1.2rc0` to install the latest version. We strongly suggest create a new environment to install wrench. We will bring better compatibility in the next stable release.
