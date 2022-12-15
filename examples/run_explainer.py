@@ -83,7 +83,7 @@ IF_score = explainer.compute_IF_score(
     device=device
 )
 
-alpha = 0.8
+alpha = 0.8 # sample 80%
 
 modified_soft_labels = modify_training_labels(aggregated_soft_labels, L, approx_w, IF_score, alpha, sample_method='weight', normal_if=False, act_func='identity')
 
@@ -108,5 +108,3 @@ model.fit(
 )
 acc = model.test(test_data, 'acc')
 logger.info(f'end model (LogReg) test acc: {acc}')
-
-a=1
