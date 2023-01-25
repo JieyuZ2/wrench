@@ -57,6 +57,7 @@ setup(
         'snorkel-metal>=0.5.0',
         'skweak>=0.2.13',
         'networkx>=2.2,<2.7',
+        'hyperlm>=0.0.5',
     ],
     python_requires=">=3.6",
     keywords="machine-learning ai weak-supervision",

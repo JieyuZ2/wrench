@@ -14,6 +14,10 @@
 
 
 ## 🔧 New
+**1/25/23**
+1. Add [Hyper label model](https://github.com/JieyuZ2/wrench/tree/main/examples/run_hyper_label_model.py), please find more details in our [paper](https://openreview.net/forum?id=aCQt_BrkSjC).
+
+
 **4/20/22**
 1. Add [WS explainer](https://github.com/JieyuZ2/wrench/tree/main/examples/run_explainer.py), please find more details in our [paper](https://openreview.net/forum?id=X8mmH03wFlD).
 
