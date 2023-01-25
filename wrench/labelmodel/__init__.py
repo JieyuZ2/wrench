@@ -10,3 +10,4 @@ from .weapo import Weapo
 from .ebcc import EBCC
 from .ibcc import IBCC
 from .fable import Fable
+from .hyper_label_model import HyperLM
