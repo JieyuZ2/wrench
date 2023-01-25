@@ -155,7 +155,8 @@ TODO-list: check [this](https://github.com/JieyuZ2/wrench/wiki/TODO-List) out!
  | EBCC                     | Label Model | [link](https://proceedings.mlr.press/v97/li19i.html) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/labelmodel/ebcc.py#L12)             |
 | IBCC                     | Label Model | [link](https://proceedings.mlr.press/v97/li19i.html) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/labelmodel/ibcc.py#L11)             |
 | FABLE                    | Label Model | [link](https://arxiv.org/abs/2210.02724)             | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/labelmodel/fable.py#L331)           |
- | Logistic Regression      | End Model   | --                                                   | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/linear_model.py#L52)       |
+|Hyper Label Model         | Label Model |  [link](https://openreview.net/forum?id=aCQt_BrkSjC) | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/labelmodel/hyper_label_model.py)           |
+| Logistic Regression      | End Model   | --                                                   | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/linear_model.py#L52)       |
  | MLP                      | End Model   | --                                                   | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/neural_model.py#L21)       |
  | BERT                     | End Model   | [link](https://huggingface.co/models)                | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/bert_model.py#L23)         |
  | COSINE                   | End Model   | [link](https://arxiv.org/abs/2010.07835)             | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/cosine.py#L68)             |
