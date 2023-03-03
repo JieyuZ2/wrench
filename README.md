@@ -19,7 +19,7 @@
 
 
 **4/20/22**
-1. Add [WS explainer](https://github.com/JieyuZ2/wrench/tree/main/examples/run_explainer.py), please find more details in our [paper](https://openreview.net/forum?id=X8mmH03wFlD).
+1. Add [WS explainer](https://github.com/JieyuZ2/wrench/tree/main/examples/run_explainer.py), please find more details in our [paper](https://openreview.net/forum?id=7CONgGdxsV).
 
 **4/20/22**
 1. We have updated the `setup.py` to make installation more flexible.
