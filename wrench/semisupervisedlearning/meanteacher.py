@@ -184,17 +184,16 @@ class MeanTeacher(BaseTorchClassModel):
                     target = y_train[batch_idx]
                     loss_sup = cross_entropy_with_probs(outputs, target)
 
-                    unlabeled_batch1 = next(unlabeled_train_dataloader)
-                    unlabeled_batch2 = next(unlabeled_train_dataloader)
+                    unlabeled_batch = next(unlabeled_train_dataloader)
 
                     bn_controller.freeze_bn(self.model)
-                    outputs1 = self.model(unlabeled_batch1)
+                    outputs1 = self.model(unlabeled_batch)
                     bn_controller.unfreeze_bn(self.model)
 
                     self.ema.apply_shadow()
                     with torch.no_grad():
                         bn_controller.freeze_bn(self.model)
-                        outputs2 = self.model(unlabeled_batch2)
+                        outputs2 = self.model(unlabeled_batch)
                         bn_controller.unfreeze_bn(self.model)
                     self.ema.restore()
 
