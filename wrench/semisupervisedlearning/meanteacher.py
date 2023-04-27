@@ -96,7 +96,9 @@ class MeanTeacher(BaseTorchClassModel):
             use_label_model=False,
             **kwargs
         )
-        self.is_bert = False
+        self.is_bert = self.config.backbone_config['name'] == 'BERT'
+        if self.is_bert:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.config.backbone_config['paras']['model_name'])
 
     def fit(self,
             dataset_train: BaseDataset,
