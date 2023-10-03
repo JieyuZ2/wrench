@@ -437,3 +437,15 @@ We're also open to any collaboration!
 ## 🔧  Contributing Dataset and Model
 
 We sincerely welcome any contribution to the datasets or models!
+
+## 🔧  Citattion
+```
+@inproceedings{
+zhang2021wrench,
+title={{WRENCH}: A Comprehensive Benchmark for Weak Supervision},
+author={Jieyu Zhang and Yue Yu and Yinghao Li and Yujing Wang and Yaming Yang and Mao Yang and Alexander Ratner},
+booktitle={Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track},
+year={2021},
+url={https://openreview.net/forum?id=Q9SKS5k8io}
+}
+```
