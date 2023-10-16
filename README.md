@@ -163,7 +163,7 @@ TODO-list: check [this](https://github.com/JieyuZ2/wrench/wiki/TODO-List) out!
 | ARS2                     | End Model   | [link](https://arxiv.org/abs/2210.03092)             | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/endmodel/ars2.py#L53)               |
  | Denoise                  | Joint Model | [link](https://arxiv.org/abs/2010.04582)             | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/denoise.py#L72)      |
  | WeaSEL                   | Joint Model | [link](https://arxiv.org/abs/2107.02233)             | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/weasel.py#L72)       |
- | SepLL                   | Joint Model | [link](https://arxiv.org/abs/2210.13898)             | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/sepll.py#L87)        |
+ | SepLL                   | Joint Model | [link](https://arxiv.org/abs/2210.13898)             | [link](https://github.com/JieyuZ2/wrench/blob/main/wrench/classification/sepll.py#L120)        |
  
 
 ### sequence tagging:
