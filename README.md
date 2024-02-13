@@ -95,9 +95,14 @@ source activate wrench
 ```
 If this not working or you want to use only a subset of modules of Wrench, check out this [wiki page](https://github.com/JieyuZ2/wrench/wiki/Environment-Installation)
 
-## 🔧 Available Datasets
+[4] Download datasets:
+```python
+from huggingface_hub import snapshot_download
+path = "path to local dir"
+snapshot_download(repo_id="jieyuz2/WRENCH", repo_type="dataset", local_dir=path)
+```
 
-The datasets can be downloaded via [this](https://drive.google.com/drive/folders/1v55IKG2JN9fMtKJWU48B_5_DcPWGnpTq?usp=sharing).
+## 🔧 Available Datasets
 
 **Note that some datasets may have more training examples than what is reported in README/paper because we include the dev set, whose indices can be found in labeled_id.json if exists.**
 
